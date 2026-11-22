@@ -69,6 +69,20 @@
 			--accent-ink: #1a1007;
 		}
 
+		body.theme-film {
+			--bg: #040508;
+			--glass: rgba(11, 14, 22, 0.66);
+			--glass-border: rgba(138, 226, 218, 0.20);
+			--text: rgba(238, 245, 250, 0.94);
+			--muted: rgba(182, 204, 216, 0.70);
+			--accent: #6ce5d6;
+			--accent-warm: #e59ef0;
+			--accent-soft: rgba(108, 229, 214, 0.20);
+			--accent-hover: rgba(108, 229, 214, 0.14);
+			--accent-border: rgba(108, 229, 214, 0.46);
+			--accent-ink: #041316;
+		}
+
 		* {
 			box-sizing: border-box;
 		}
@@ -670,12 +684,21 @@
 				max-width: none;
 				justify-content: space-between;
 				gap: 2px;
-				padding: 4px;
+				padding: 3px;
+				overflow-x: auto;
+				scrollbar-width: none;
+				-webkit-overflow-scrolling: touch;
+			}
+
+			.hud-bar::-webkit-scrollbar {
+				display: none;
 			}
 
 			.hud-btn {
-				padding: 10px 7px;
-				font-size: 12px;
+				flex-shrink: 0;
+				padding: 9px 6px;
+				font-size: 11px;
+				letter-spacing: -0.01em;
 			}
 
 			.hud-divider {
@@ -727,6 +750,7 @@
 			<button id="btn-demo-moss" class="hud-btn" type="button" aria-pressed="true">Moss &amp; Pappus</button>
 			<button id="btn-demo-snow" class="hud-btn" type="button" aria-pressed="false">Snow &amp; Light</button>
 			<button id="btn-demo-dog" class="hud-btn" type="button" aria-pressed="false">Petting Fur</button>
+			<button id="btn-demo-film" class="hud-btn" type="button" aria-pressed="false">Film Bloom</button>
 			<span class="hud-divider" aria-hidden="true"></span>
 			<button id="btn-toggle-panel" class="hud-btn" type="button" aria-expanded="false" aria-controls="hud-panel">Controls</button>
 		</div>
@@ -847,6 +871,46 @@
 				<div class="action-row">
 					<button id="btn-dog-shake" class="action-btn" type="button">Shake Off</button>
 					<button id="btn-dog-smooth" class="action-btn" type="button">Smooth Coat</button>
+				</div>
+			</div>
+
+			<div id="film-only-controls" class="scene-controls" hidden>
+				<div class="control-row">
+					<div class="control-header"><strong>Surface</strong></div>
+					<div class="segmented segmented-3">
+						<button id="btn-film-lake" type="button" aria-pressed="true">Still Lake</button>
+						<button id="btn-film-veined" type="button" aria-pressed="false">Micro-Veined</button>
+						<button id="btn-film-fracture" type="button" aria-pressed="false">Fracture Lines</button>
+					</div>
+				</div>
+
+				<div class="control-row">
+					<div class="control-header">
+						<strong>Film Thickness</strong>
+						<span id="val-film-thickness">1.0x</span>
+					</div>
+					<input id="range-film-thickness" type="range" min="0.5" max="1.8" step="0.05" value="1">
+				</div>
+
+				<div class="control-row">
+					<div class="control-header">
+						<strong>Oil Viscosity</strong>
+						<span id="val-film-viscosity">1.0x</span>
+					</div>
+					<input id="range-film-viscosity" type="range" min="0.3" max="2.2" step="0.05" value="1">
+				</div>
+
+				<div class="control-row">
+					<div class="control-header">
+						<strong>Still Drops</strong>
+						<span id="val-film-rain">1.0x</span>
+					</div>
+					<input id="range-film-rain" type="range" min="0.3" max="2.5" step="0.05" value="1">
+				</div>
+
+				<div class="action-row">
+					<button id="btn-film-drop" class="action-btn" type="button">Drop Bead</button>
+					<button id="btn-film-gust" class="action-btn" type="button">Marangoni Gust</button>
 				</div>
 			</div>
 
@@ -976,6 +1040,6 @@
 
 		} )();
 	</script>
-	<script type="module" src="./src/main.js?v=11"></script>
+	<script type="module" src="./src/main.js?v=12"></script>
 </body>
 </html>

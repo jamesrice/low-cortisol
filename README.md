@@ -2,16 +2,17 @@
 
 **Author:** James Rice
 
-A general-purpose **WebGPU + Three.js r187 + TSL** interactive collision and GPU-simulation framework, paired with three complete interactive experiences:
+A general-purpose **WebGPU + Three.js r187 + TSL** interactive collision and GPU-simulation framework, paired with four complete low-cortisol interactive experiences:
 
 1. **Macro Moss Tree & Dandelion Pappus** *(default)* — A macro-focused gnarled forest tree covered in 32k–145k GPU-simulated moss cushion fronds, swaying sporophytes, rising optical-bokeh spores, and sculpted 3D dandelion pappus parachutes floating in woodland sunbeams. Moving your pointer, finger, breath, or hand glides over the 3D bark to brush, ripple, unfurl, and illuminate the moss while swirling dandelion pappus through dipole air wakes, with serene `Drift Blooms`.
 2. **Snow & Light** — Tens of thousands of procedural 3D dendritic ice crystals and optical-bokeh frost dust swirling before ambiently reflective shimmering frozen glass and deep blue rays, with live Field Mode (`Repel Shield` / `Crystal Vortex`), `Blizzard Drift`, `Frozen Rays`, `Field Radius`, `Frost Gust`, and `Starlight Drift`.
 3. **Petting Fur** — A tactile, touch-first macro view of petting a dog's living double-coat fur (38k–136k GPU-simulated anisotropic strands + sunlit coat motes). Supports multi-touch petting (up to 5 independent fingers or webcam digits), breath wind ripples, and morphs live on the GPU between **Black Labrador**, **Husky**, and **Bernese Mountain Dog**, with controls for `Touch Pressure`, `Coat Softness`, `Sunbeam Warmth`, `Shake Off`, and `Smooth Coat`.
+4. **Film Bloom** — Physically modeled 9-band CIE two-beam thin-film interference over a coupled 2D capillary-ripple and Marangoni nanometer-thickness fluid simulation on a dark nocturnal still lake. Features 3D falling liquid beads, hold/pinch-to-swell drops, live-morphing surface characters (`Still Lake`, `Micro-Veined`, `Fracture Lines`), GPU meniscus mist motes, and Minnaert water-drop bubble synthesis.
 
 ### Multi-Sensory Global Controls (Top-Right Dock)
-- **Ambient Procedural Audio (`AudioWorklet`)**: Real-time 48 kHz physical-modeling & ASMR synthesis (modal resonators, dual-SVF airflow/velvet fur whisper, refracted frost micro-grains, Hadamard FDN stereo reverb) consistent to each scene and independent of input method.
-- **3-Phase Breath Input (`AudioWorklet` Mic DSP)**: Cycles **Off → Breeze → Steer**. Gentle exhales create living wind across moss, snow, or fur; strong puffs trigger `Send Pulse`, `Frost Gust`, or `Shake Off`; Phase 2 (`Steer`) guides motion via breath brightness (or stereo L/R balance on stereo mics).
-- **Webcam Hand Tracking (`@mediapipe/tasks-vision` + One Euro Filter)**: Lazy-loaded on demand with independent 5-digit finger tracking, Z-axis camera proximity scaling pressure/radius, and distinct single-finger vs. open-palm vs. pinch/fist responses.
+- **Ambient Procedural Audio (`AudioWorklet`)**: Real-time 48 kHz physical-modeling & ASMR synthesis (modal resonators, Minnaert water-drop bubble plinks, dual-SVF airflow/velvet fur whisper, refracted frost micro-grains, Hadamard FDN stereo reverb) consistent to each scene and independent of input method.
+- **3-Phase Breath Input (`AudioWorklet` Mic DSP)**: Cycles **Off → Breeze → Steer**, paired with a subtle ambient breath waveform. Gentle exhales create living wind across moss, snow, fur, or still water; strong puffs trigger `Send Pulse`, `Frost Gust`, `Shake Off`, or `Marangoni Gust`; Phase 2 (`Steer`) guides motion via breath brightness (or stereo L/R balance on stereo mics).
+- **Webcam Hand Tracking (`@mediapipe/tasks-vision` + One Euro Filter)**: Lazy-loaded on demand with a pure gossamer light-line hand overlay, independent 5-digit finger tracking, Z-axis camera proximity scaling pressure/radius, and distinct single-finger vs. open-palm vs. pinch/fist responses.
 
 ---
 
@@ -27,6 +28,7 @@ Then open in a WebGPU-capable browser (Chrome / Edge / Safari Technology Preview
 - **Default (Macro Moss & Pappus):** `http://localhost:8080/`
 - **Snow & Light:** `http://localhost:8080/?demo=snow`
 - **Petting Fur:** `http://localhost:8080/?demo=dog` (optional `&breed=labrador|husky|bernese`)
+- **Film Bloom:** `http://localhost:8080/?demo=film` (optional `&surface=lake|veined|fracture`)
 
 ### Supported URL Flags
 - `?q=low|medium|high|ultra` — Override automatic quality tier

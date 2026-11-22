@@ -5,6 +5,7 @@
 //   0 = Moss & Pappus  (warm woodland air, silky panned wind swoosh, pentatonic wood/kalimba modals)
 //   1 = Snow & Light   (glacial glass shimmer, refracted micro-ice grains, celesta/glass-bowl modals)
 //   2 = Petting Fur    (room warmth + dog breath cadence, breed-morphed velvet fur whisper, contented sigh)
+//   3 = Film Bloom     (nocturnal still-lake calm, Minnaert bubble water drops, silky liquid glide)
 
 const TWO_PI = Math.PI * 2;
 
@@ -15,6 +16,8 @@ const MOSS_SCALE = [ 293.66, 329.63, 369.99, 440.00, 493.88, 587.33, 659.25, 739
 const SNOW_SCALE = [ 369.99, 415.30, 466.16, 523.25, 554.37, 622.25, 739.99, 830.61, 932.33, 1108.73 ];
 // Warm cozy open-fifth / suspended hues (Petting Fur)
 const DOG_SCALE = [ 146.83, 220.00, 293.66, 329.63, 440.00 ];
+// Serene Cmaj9 / A minor pentatonic nocturnal water-drop scale (Film Bloom)
+const FILM_SCALE = [ 261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99 ];
 
 function clamp( x, lo, hi ) {
 
@@ -78,6 +81,7 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 		this.wMoss = 1;
 		this.wSnow = 0;
 		this.wDog = 0;
+		this.wFilm = 0;
 
 		// Real-time smoothed telemetry targets
 		this.tSpeed = 0;
@@ -156,7 +160,10 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 				pan: 0,
 				attack: 0.006,
 				noiseAmt: 0,
-				isSigh: false
+				isSigh: false,
+				isDrop: false,
+				fStart: 440,
+				chirpTau: 0.032
 			} );
 
 		}
@@ -213,7 +220,7 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 
 		} else if ( m.type === 'scene' ) {
 
-			this.sceneId = m.id === 'snow' ? 1 : ( m.id === 'dog' ? 2 : 0 );
+			this.sceneId = m.id === 'snow' ? 1 : ( m.id === 'dog' ? 2 : ( m.id === 'film' ? 3 : 0 ) );
 
 		} else if ( m.type === 'telemetry' ) {
 
@@ -248,8 +255,21 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 			const p = clamp( m.pan || 0, - 0.7, 0.7 );
 			this.gustEnv = 1.0;
 			this.gustPan = p;
-			this.spawnModal( 1, p - 0.25, 0.42, 2 );
-			this.spawnModal( 1, p + 0.22, 0.38, 6 );
+			if ( this.sceneId === 3 ) {
+
+				this.spawnDrop( p - 0.24, 1.35, 0.56 );
+				this.spawnDrop( p + 0.22, 0.92, 0.44 );
+
+			} else {
+
+				this.spawnModal( 1, p - 0.25, 0.42, 2 );
+				this.spawnModal( 1, p + 0.22, 0.38, 6 );
+
+			}
+
+		} else if ( m.type === 'drop' ) {
+
+			this.spawnDrop( m.pan || 0, m.size ?? 1.0, m.intensity ?? 0.62 );
 
 		} else if ( m.type === 'chime' ) {
 
@@ -289,6 +309,7 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 
 		v.active = true;
 		v.isSigh = false;
+		v.isDrop = false;
 		v.age = 0;
 		v.p1 = 0;
 		v.p2 = 0;
@@ -351,6 +372,7 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 		this.nextVoice = ( this.nextVoice + 1 ) % this.voices.length;
 		v.active = true;
 		v.isSigh = true;
+		v.isDrop = false;
 		v.age = 0;
 		v.f1 = 196.0;
 		v.f2 = 293.66;
@@ -367,6 +389,49 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 		v.pan = 0;
 		v.attack = 0.38;
 		v.noiseAmt = 0.24;
+
+	}
+
+	spawnDrop( pan, size, intensity ) {
+
+		// Physically modeled Minnaert bubble cavity water-drop plink:
+		// smaller drops pinch off higher & faster; larger held drops resonate deeper & rounder
+		const v = this.voices[ this.nextVoice ];
+		this.nextVoice = ( this.nextVoice + 1 ) % this.voices.length;
+
+		const sz = clamp( size || 1.0, 0.5, 2.2 );
+		const szNorm = clamp( ( sz - 0.55 ) / 1.45, 0, 1 );
+		// Map smaller drops toward higher register, heavier drops toward warm mellow mid-lows
+		const maxIdx = FILM_SCALE.length - 1;
+		const centerIdx = Math.round( ( 1 - szNorm ) * ( maxIdx - 2 ) ) + 1;
+		const jitter = Math.floor( this.rand() * 1.9 );
+		const idx = clamp( centerIdx + jitter, 0, maxIdx );
+
+		const fEnd = FILM_SCALE[ idx ] * ( 1 + this.rand() * 0.006 );
+		const chirpRatio = 1.48 + ( 1 - szNorm ) * 0.28; // characteristic upward liquid bloop
+		const fStart = fEnd / chirpRatio;
+
+		v.active = true;
+		v.isSigh = false;
+		v.isDrop = true;
+		v.age = 0;
+		v.fStart = fStart;
+		v.f1 = fEnd;
+		v.f2 = fEnd * 2.0;
+		v.f3 = fEnd * 3.01;
+		v.chirpTau = 0.024 + szNorm * 0.024;
+		v.p1 = 0;
+		v.p2 = 0;
+		v.p3 = 0;
+		v.pan = clamp( pan || 0, - 0.85, 0.85 );
+		v.amp = 0.105 * clamp( intensity || 0.62, 0.16, 1.15 );
+		v.decay = Math.exp( - 1 / ( this.sr * ( 0.28 + szNorm * 0.24 + this.rand01() * 0.12 ) ) );
+		v.d2 = Math.exp( - 1 / ( this.sr * 0.085 ) );
+		v.d3 = Math.exp( - 1 / ( this.sr * 0.045 ) );
+		v.a2 = 0.16;
+		v.a3 = 0.05;
+		v.attack = 0.0028;
+		v.noiseAmt = 0.022;
 
 	}
 
@@ -440,7 +505,7 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 		const windCutoff = clamp( 240 + speedNorm * 680 + breathNorm * 620 + this.gustEnv * 920, 180, 2800 );
 		const windG = Math.tan( Math.PI * windCutoff * invSr );
 
-		const bedCutoff = 260 * this.wMoss + 520 * this.wSnow + 190 * this.wDog;
+		const bedCutoff = 260 * this.wMoss + 520 * this.wSnow + 190 * this.wDog + 205 * this.wFilm;
 		const bedG = Math.tan( Math.PI * clamp( bedCutoff, 140, 1400 ) * invSr );
 
 		// Breed-morphed fur-whisper formants
@@ -459,6 +524,7 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 			this.wMoss += ( ( this.sceneId === 0 ? 1 : 0 ) - this.wMoss ) * sceneStep;
 			this.wSnow += ( ( this.sceneId === 1 ? 1 : 0 ) - this.wSnow ) * sceneStep;
 			this.wDog += ( ( this.sceneId === 2 ? 1 : 0 ) - this.wDog ) * sceneStep;
+			this.wFilm += ( ( this.sceneId === 3 ? 1 : 0 ) - this.wFilm ) * sceneStep;
 
 			if ( this.master < 1e-5 && this.targetMaster === 0 ) {
 
@@ -584,10 +650,33 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 
 			}
 
+			// Film Bloom ambient: nocturnal still-lake water stillness + translucent liquid-glass pad
+			if ( this.wFilm > 0.002 ) {
+
+				this.ph0 += 130.81 * TWO_PI * invSr; // warm C3
+				this.ph1 += 196.00 * TWO_PI * invSr; // open G3
+				this.ph2 += 293.66 * TWO_PI * invSr; // delicate D4 iridescent bloom shimmer
+				if ( this.ph0 > TWO_PI ) this.ph0 -= TWO_PI;
+				if ( this.ph1 > TWO_PI ) this.ph1 -= TWO_PI;
+				if ( this.ph2 > TWO_PI ) this.ph2 -= TWO_PI;
+
+				const lakePad = ( Math.sin( this.ph0 ) * 0.56 + Math.sin( this.ph1 ) * 0.44 ) * ( 0.017 + 0.011 * slowLfo );
+				const bloomHarm = Math.sin( this.ph2 ) * clamp( this.sStillGlow, 0, 1 ) * ( 0.014 + 0.008 * ( 1 - slowLfo ) );
+				const filmBedL = bedFiltL * ( 0.048 + 0.024 * slowLfo ) + lakePad + bloomHarm;
+				const filmBedR = bedFiltR * ( 0.048 + 0.024 * ( 1 - slowLfo ) ) + lakePad + bloomHarm;
+
+				dryL += filmBedL * this.wFilm;
+				dryR += filmBedR * this.wFilm;
+				wetSendL += ( lakePad + bloomHarm ) * this.wFilm * 0.62;
+				wetSendR += ( lakePad + bloomHarm ) * this.wFilm * 0.62;
+
+			}
+
 			// ----------------------------------------------------------
-			// 2. REACTIVE SILKY WIND SWOOSH (Moss & Snow + global breath breeze)
+			// 2. REACTIVE SILKY WIND / LIQUID SWOOSH (Moss, Snow, Film + global breath breeze)
 			// ----------------------------------------------------------
 			const swooshAmt = ( this.wMoss + this.wSnow ) * ( Math.min( 1.2, this.sSpeed * 0.72 ) + this.sBreath * 0.85 + this.gustEnv * 0.95 )
+				+ this.wFilm * ( Math.min( 1.0, this.sSpeed * 0.52 ) + this.sBreath * 0.68 + this.gustEnv * 0.82 )
 				+ this.wDog * ( this.sBreath * 0.48 );
 			if ( swooshAmt > 0.004 ) {
 
@@ -667,11 +756,29 @@ class CollisionAudioProcessor extends AudioWorkletProcessor {
 
 				}
 
-				// Gentle pitch drop on contented sigh
-				const pitchMul = v.isSigh ? ( 1 - Math.min( 0.09, v.age * 0.045 ) ) : 1;
-				v.p1 += v.f1 * pitchMul * TWO_PI * invSr;
-				v.p2 += v.f2 * pitchMul * TWO_PI * invSr;
-				v.p3 += v.f3 * pitchMul * TWO_PI * invSr;
+				// Pitch trajectory: Minnaert upward bubble chirp on water drops, gentle pitch drop on sigh
+				let fInst1 = v.f1;
+				let fInst2 = v.f2;
+				let fInst3 = v.f3;
+				if ( v.isDrop ) {
+
+					const chirpE = Math.exp( - v.age / v.chirpTau );
+					fInst1 = v.f1 - ( v.f1 - v.fStart ) * chirpE;
+					fInst2 = fInst1 * 2.0;
+					fInst3 = fInst1 * 3.01;
+
+				} else if ( v.isSigh ) {
+
+					const pitchMul = 1 - Math.min( 0.09, v.age * 0.045 );
+					fInst1 *= pitchMul;
+					fInst2 *= pitchMul;
+					fInst3 *= pitchMul;
+
+				}
+
+				v.p1 += fInst1 * TWO_PI * invSr;
+				v.p2 += fInst2 * TWO_PI * invSr;
+				v.p3 += fInst3 * TWO_PI * invSr;
 				if ( v.p1 > TWO_PI ) v.p1 -= TWO_PI;
 				if ( v.p2 > TWO_PI ) v.p2 -= TWO_PI;
 				if ( v.p3 > TWO_PI ) v.p3 -= TWO_PI;

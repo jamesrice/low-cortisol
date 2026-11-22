@@ -7,6 +7,7 @@ import {
 import { createMossTreeExperience } from './examples/moss-tree/scene.js';
 import { createSnowAndLightExperience } from './examples/snow-and-light/scene.js';
 import { createDogFurExperience } from './examples/dog-fur/scene.js';
+import { createFilmBloomExperience } from './examples/film-bloom/scene.js';
 
 window.__appBooted = true;
 
@@ -62,6 +63,14 @@ const DEMOS = {
 		themeColor: '#0c0907',
 		hideCursor: false,
 		hint: 'Pet slowly with one or more fingers to comb & part the coat'
+	},
+	film: {
+		btn: $( 'btn-demo-film' ),
+		controls: $( 'film-only-controls' ),
+		themeClass: 'theme-film',
+		themeColor: '#040508',
+		hideCursor: false,
+		hint: 'Tap to drop a water bead · Hold to swell · Glide to swirl iridescent film'
 	}
 };
 
@@ -103,6 +112,21 @@ const rangeDogWarmth = $( 'range-dog-warmth' );
 const valDogWarmth = $( 'val-dog-warmth' );
 const btnDogShake = $( 'btn-dog-shake' );
 const btnDogSmooth = $( 'btn-dog-smooth' );
+
+// Film Bloom controls
+const filmSurfaceButtons = {
+	lake: $( 'btn-film-lake' ),
+	veined: $( 'btn-film-veined' ),
+	fracture: $( 'btn-film-fracture' )
+};
+const rangeFilmThickness = $( 'range-film-thickness' );
+const valFilmThickness = $( 'val-film-thickness' );
+const rangeFilmViscosity = $( 'range-film-viscosity' );
+const valFilmViscosity = $( 'val-film-viscosity' );
+const rangeFilmRain = $( 'range-film-rain' );
+const valFilmRain = $( 'val-film-rain' );
+const btnFilmDrop = $( 'btn-film-drop' );
+const btnFilmGust = $( 'btn-film-gust' );
 
 let currentDemo = null;
 let currentName = 'moss';
@@ -149,7 +173,7 @@ function showHint( text ) {
 function updateDemoUI( name ) {
 
 	const spec = DEMOS[ name ] || DEMOS.moss;
-	document.body.classList.remove( 'theme-moss', 'theme-snow', 'theme-dog' );
+	document.body.classList.remove( 'theme-moss', 'theme-snow', 'theme-dog', 'theme-film' );
 	document.body.classList.add( spec.themeClass );
 	if ( themeMeta ) themeMeta.setAttribute( 'content', spec.themeColor );
 
@@ -206,6 +230,19 @@ function resetDogControlUI( breed = 'labrador' ) {
 
 }
 
+function resetFilmControlUI( surface = 'lake' ) {
+
+	const chosen = filmSurfaceButtons[ surface ] ? surface : 'lake';
+	setSegmentedActive( Object.values( filmSurfaceButtons ), filmSurfaceButtons[ chosen ] );
+	rangeFilmThickness.value = '1';
+	valFilmThickness.textContent = '1.0x';
+	rangeFilmViscosity.value = '1';
+	valFilmViscosity.textContent = '1.0x';
+	rangeFilmRain.value = '1';
+	valFilmRain.textContent = '1.0x';
+
+}
+
 async function mountDemo( name, options = {} ) {
 
 	if ( switching ) return;
@@ -242,6 +279,16 @@ async function mountDemo( name, options = {} ) {
 				audio: audioEngine
 			} );
 			if ( initialBreed !== 'labrador' ) currentDemo.setBreed( initialBreed );
+
+		} else if ( name === 'film' ) {
+
+			const initialSurface = filmSurfaceButtons[ options.surface ] ? options.surface : 'lake';
+			resetFilmControlUI( initialSurface );
+			currentDemo = await createFilmBloomExperience( {
+				container: stage,
+				audio: audioEngine
+			} );
+			if ( initialSurface !== 'lake' ) currentDemo.setSurfaceMode( initialSurface );
 
 		} else {
 
@@ -431,6 +478,27 @@ bindRange( rangeDogWarmth, valDogWarmth, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) 
 btnDogShake.addEventListener( 'click', () => currentDemo?.triggerShakeOff?.() );
 btnDogSmooth.addEventListener( 'click', () => currentDemo?.triggerSmoothCoat?.() );
 
+// ------------------------------------------------------------ Film Bloom Controls
+
+const allFilmSurfaceBtns = Object.values( filmSurfaceButtons );
+for ( const [ surfaceKey, btn ] of Object.entries( filmSurfaceButtons ) ) {
+
+	btn.addEventListener( 'click', () => {
+
+		if ( ! currentDemo?.setSurfaceMode ) return;
+		currentDemo.setSurfaceMode( surfaceKey );
+		setSegmentedActive( allFilmSurfaceBtns, btn );
+
+	} );
+
+}
+
+bindRange( rangeFilmThickness, valFilmThickness, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setThicknessScale?.( v ) );
+bindRange( rangeFilmViscosity, valFilmViscosity, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setViscosity?.( v ) );
+bindRange( rangeFilmRain, valFilmRain, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setRainRate?.( v ) );
+btnFilmDrop.addEventListener( 'click', () => currentDemo?.triggerDropBead?.() );
+btnFilmGust.addEventListener( 'click', () => currentDemo?.triggerMarangoniGust?.() );
+
 // ------------------------------------------------------------ Global Sensory Dock (Hands, 3-Phase Breath, Audio)
 
 btnAudio.addEventListener( 'click', async () => {
@@ -612,10 +680,11 @@ setInterval( () => {
 
 }, 500 );
 
-// Boot initial scene (?demo=moss | ?demo=snow | ?demo=dog & optional ?breed=labrador|husky|bernese)
+// Boot initial scene (?demo=moss | ?demo=snow | ?demo=dog | ?demo=film)
 const flags = parseRuntimeFlags();
 const urlParams = new URLSearchParams( window.location.search );
 const requestedBreed = ( urlParams.get( 'breed' ) || '' ).toLowerCase();
+const requestedSurface = ( urlParams.get( 'surface' ) || '' ).toLowerCase();
 
 // Strictly opt-in passive input event monitor (?debug-input only; completely dormant otherwise)
 if ( urlParams.has( 'debug-input' ) ) {
@@ -673,8 +742,9 @@ function resolveInitialDemo( demoFlag ) {
 
 	if ( demoFlag === 'snow' || demoFlag === 'snow-and-light' || demoFlag === 'light' ) return 'snow';
 	if ( demoFlag === 'dog' || demoFlag === 'fur' || demoFlag === 'dog-fur' || demoFlag === 'petting' ) return 'dog';
+	if ( demoFlag === 'film' || demoFlag === 'film-bloom' || demoFlag === 'thin-film' || demoFlag === 'bloom' || demoFlag === 'lake' ) return 'film';
 	return 'moss';
 
 }
 
-mountDemo( resolveInitialDemo( flags.demo ), { breed: requestedBreed } );
+mountDemo( resolveInitialDemo( flags.demo ), { breed: requestedBreed, surface: requestedSurface } );

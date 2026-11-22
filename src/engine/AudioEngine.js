@@ -181,6 +181,13 @@ export function createAudioEngine() {
 
 	}
 
+	function triggerDrop( pan = 0, size = 1.0, intensity = 0.65 ) {
+
+		if ( ! enabled ) return;
+		post( { type: 'drop', pan, size, intensity } );
+
+	}
+
 	function triggerShakeOff() {
 
 		if ( ! enabled ) return;
@@ -226,6 +233,7 @@ export function createAudioEngine() {
 		triggerPulse,
 		triggerGust,
 		triggerChime,
+		triggerDrop,
 		triggerShakeOff,
 		triggerSmoothCoat,
 		dispose
