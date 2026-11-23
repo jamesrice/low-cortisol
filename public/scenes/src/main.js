@@ -18,6 +18,7 @@ const btnPanel = $( 'btn-toggle-panel' );
 const panel = $( 'hud-panel' );
 const themeMeta = document.querySelector( 'meta[name="theme-color"]' );
 
+const sensoryDock = document.querySelector( '.sensory-dock' );
 const btnHands = $( 'btn-hands' );
 const btnBreath = $( 'btn-breath' );
 const btnAudio = $( 'btn-audio' );
@@ -142,6 +143,95 @@ let switching = false;
 let hintTimer = null;
 let toastTimer = null;
 let scenePickerOpen = false;
+let mountedExtraDockControls = [];
+
+function isCustomHandTracking( demo ) {
+
+	return Boolean( demo && demo.customHandTracking );
+
+}
+
+function getActiveHandTrackingState( demo ) {
+
+	if ( isCustomHandTracking( demo ) ) {
+
+		return Boolean( demo.getHandsActive?.() );
+
+	}
+	return Boolean( handInput.active );
+
+}
+
+function syncHandButtonUI( active ) {
+
+	const on = Boolean( active );
+	btnHands.classList.toggle( 'is-active', on );
+	btnHands.setAttribute( 'aria-pressed', String( on ) );
+	const customTitle = currentDemo?.handsTitle?.( on );
+	btnHands.title = customTitle || ( on
+		? 'Webcam Hand Tracking (On — wave open hand, 1 finger focus, closer = deeper)'
+		: 'Webcam Hand Tracking (Off)' );
+	currentDemo?.syncDockControls?.();
+
+}
+
+function clearExtraDockControls() {
+
+	for ( const el of mountedExtraDockControls ) {
+
+		if ( el && el.parentNode ) el.parentNode.removeChild( el );
+
+	}
+	mountedExtraDockControls = [];
+
+}
+
+function mountExtraDockControls( demo ) {
+
+	clearExtraDockControls();
+	if ( ! sensoryDock || ! demo?.getExtraDockControls ) return;
+	const controls = demo.getExtraDockControls();
+	if ( ! Array.isArray( controls ) ) return;
+	for ( const el of controls ) {
+
+		if ( ! ( el instanceof HTMLElement ) ) continue;
+		sensoryDock.insertBefore( el, btnHands );
+		mountedExtraDockControls.push( el );
+
+	}
+	demo.syncDockControls?.();
+
+}
+
+function stopAllSensors( { disposeGlobal = false } = {} ) {
+
+	if ( isCustomHandTracking( currentDemo ) ) {
+
+		try { currentDemo.stopHands?.(); } catch {}
+
+	}
+	if ( disposeGlobal ) {
+
+		try { handInput.dispose?.(); } catch {}
+
+	} else if ( handInput.active ) {
+
+		try { handInput.stop(); } catch {}
+
+	}
+	if ( breathInput.active ) {
+
+		try { breathInput.stop?.(); } catch {}
+
+	}
+	if ( audioEngine.enabled ) {
+
+		try { audioEngine.setEnabled?.( false ); } catch {}
+
+	}
+	syncHandButtonUI( false );
+
+}
 
 function showError( err ) {
 
@@ -268,8 +358,16 @@ async function mountDemo( name, options = {} ) {
 
 	try {
 
+		const prevWasCustom = isCustomHandTracking( currentDemo );
+
 		if ( currentDemo ) {
 
+			if ( prevWasCustom ) {
+
+				try { currentDemo.stopHands?.(); } catch {}
+
+			}
+			clearExtraDockControls();
 			currentDemo.dispose();
 			currentDemo = null;
 
@@ -317,6 +415,16 @@ async function mountDemo( name, options = {} ) {
 			} );
 
 		}
+
+		// Ensure global handInput & its overlay/chip are stopped whenever a scene opts into custom motion tracking
+		if ( isCustomHandTracking( currentDemo ) && handInput.active ) {
+
+			handInput.stop();
+
+		}
+
+		mountExtraDockControls( currentDemo );
+		syncHandButtonUI( getActiveHandTrackingState( currentDemo ) );
 
 		window.__activeDemo = currentDemo;
 
@@ -653,17 +761,44 @@ btnHands.addEventListener( 'click', async () => {
 
 	try {
 
-		const on = await handInput.toggle();
-		btnHands.classList.toggle( 'is-active', on );
-		btnHands.setAttribute( 'aria-pressed', String( on ) );
-		btnHands.title = on ? 'Webcam Hand Tracking (On — wave open hand, 1 finger focus, closer = deeper)' : 'Webcam Hand Tracking (Off)';
-		showToast( on ? 'Hands: Active · wave open hand or point' : 'Hands: Off', 2200 );
+		let on = false;
+		if ( isCustomHandTracking( currentDemo ) ) {
+
+			// Guarantee global handInput & its overlay/status chip are torn down before delegating to the scene
+			if ( handInput.active ) handInput.stop();
+			if ( typeof currentDemo.toggleHands === 'function' ) {
+
+				on = Boolean( await currentDemo.toggleHands() );
+
+			} else if ( currentDemo.getHandsActive?.() ) {
+
+				currentDemo.stopHands?.();
+				on = false;
+
+			} else {
+
+				await currentDemo.startHands?.();
+				on = true;
+
+			}
+
+		} else {
+
+			on = await handInput.toggle();
+
+		}
+
+		syncHandButtonUI( on );
+		const customToast = currentDemo?.handsToast?.( on );
+		showToast(
+			customToast || ( on ? 'Hands: Active · wave open hand or point' : 'Hands: Off' ),
+			2200
+		);
 
 	} catch ( err ) {
 
 		console.warn( '[hands] webcam unavailable', err );
-		btnHands.classList.remove( 'is-active' );
-		btnHands.setAttribute( 'aria-pressed', 'false' );
+		syncHandButtonUI( false );
 		const name = err && err.name || '';
 		const msg = ( name === 'NotAllowedError' || name === 'PermissionDeniedError' )
 			? 'Camera permission denied'
@@ -678,6 +813,19 @@ btnHands.addEventListener( 'click', async () => {
 	}
 
 } );
+
+// Tear down active webcam / mic streams cleanly when parent switches away or iframe unloads
+window.addEventListener( 'message', ( ev ) => {
+
+	if ( ev.origin !== window.location.origin || ! ev.data || typeof ev.data !== 'object' ) return;
+	if ( ev.data.type === 'lc:stop-sensors' ) {
+
+		stopAllSensors( { disposeGlobal: true } );
+
+	}
+
+} );
+window.addEventListener( 'pagehide', () => stopAllSensors( { disposeGlobal: true } ) );
 
 // Unified sensor pump feeding active scene every animation frame (zero work when sensors are off)
 let lastSensorMs = performance.now();
@@ -705,16 +853,20 @@ function pumpSensors( nowMs ) {
 
 		}
 
-		if ( handInput.active ) {
+		if ( ! isCustomHandTracking( currentDemo ) ) {
 
-			prevHandActive = true;
-			const h = handInput.update();
-			currentDemo.applyHands?.( h );
+			if ( handInput.active ) {
 
-		} else if ( prevHandActive ) {
+				prevHandActive = true;
+				const h = handInput.update();
+				currentDemo.applyHands?.( h );
 
-			prevHandActive = false;
-			currentDemo.applyHands?.( null );
+			} else if ( prevHandActive ) {
+
+				prevHandActive = false;
+				currentDemo.applyHands?.( null );
+
+			}
 
 		}
 

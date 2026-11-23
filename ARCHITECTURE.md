@@ -22,6 +22,18 @@ This document describes both layers of the **Low Cortisol** playground:
 
 In development (`npm run dev`), Vite serves `public/scenes/` verbatim as native ES modules. In production (`npm run build`), the entire app deploys cleanly to **Cloudflare Workers Static Assets** (`wrangler.jsonc`) with zero external runtime proxying.
 
+### Per-Scene Motion Tracking Contract
+
+Motion tracking is isolated per scene so each experience can own its gestures, overlays, and dock controls without interfering with other scenes:
+
+- **Arc String (`motionTracker: 'arc-custom'`)** uses its dedicated [`src/vision/handTracker.ts`](src/vision/handTracker.ts) (`1280×720` cover-fit 21-landmark mapping, `0.34`/`0.47` OK-pinch hysteresis, single-hand anchor drag, two-hand pinch draw, extended fingertip strumming) paired with the `Tracker Rig` / `Gossamer` overlays and `Camera Mirror` / `Studio Dark` Self-View backdrop in [`src/renderer/canvasRenderer.ts`](src/renderer/canvasRenderer.ts).
+- **WebGPU Scenes (`moss`, `snow`, `dog`, `film`, `motionTracker: 'engine-default'`)** continue using [`public/scenes/src/engine/HandInput.js`](public/scenes/src/engine/HandInput.js) unchanged (gossamer overlay, Z-depth pressure aura, posture detection, bottom-left status chip).
+- **Extensible WebGPU Scene Opt-In (`public/scenes/src/main.js`)**: Any scene returned by `create*Experience()` can opt out of `HandInput.js` by exposing:
+  - `customHandTracking: true`
+  - `toggleHands(): Promise<boolean>` (or `startHands(): Promise<void>` + `stopHands(): void` + `getHandsActive(): boolean`)
+  - Optional `getExtraDockControls(): HTMLElement[]`, `syncDockControls(): void`, `handsTitle(active): string`, and `handsToast(active): string`
+- **Zero-Leak Teardown**: Camera permission is never requested on page load; switching between Arc String and WebGPU scenes dispatches `lc:stop-sensors` (and `pagehide` teardown) so outgoing `MediaStreamTrack`s and overlays are released immediately.
+
 ---
 
 ## 2. WebGPU Engine Module Graph (`public/scenes/src/engine/`)

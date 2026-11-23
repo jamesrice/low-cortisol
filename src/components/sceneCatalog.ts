@@ -1,9 +1,12 @@
 export type LowCortisolSceneId = 'arc' | 'moss' | 'snow' | 'dog' | 'film';
 
+export type MotionTrackerStrategy = 'arc-custom' | 'engine-default';
+
 export interface SceneDescriptor {
   id: LowCortisolSceneId;
   name: string;
   subtitle: string;
+  motionTracker: MotionTrackerStrategy;
   liveDemoParam?: string;
 }
 
@@ -12,29 +15,34 @@ export const LOW_CORTISOL_SCENES: ReadonlyArray<SceneDescriptor> = [
     id: 'arc',
     name: 'Arc String',
     subtitle: 'Electric spring-mass plasma lines',
+    motionTracker: 'arc-custom',
   },
   {
     id: 'moss',
     name: 'Moss & Pappus',
     subtitle: 'Macro mossy trunk & dandelion seeds',
+    motionTracker: 'engine-default',
     liveDemoParam: 'moss',
   },
   {
     id: 'snow',
     name: 'Snow & Light',
     subtitle: 'Frozen-glass drift & light shafts',
+    motionTracker: 'engine-default',
     liveDemoParam: 'snow',
   },
   {
     id: 'dog',
     name: 'Petting Fur',
     subtitle: 'Multi-touch tactile coat simulation',
+    motionTracker: 'engine-default',
     liveDemoParam: 'dog',
   },
   {
     id: 'film',
     name: 'Film Bloom',
     subtitle: 'Iridescent thin-film water optics',
+    motionTracker: 'engine-default',
     liveDemoParam: 'film',
   },
 ];

@@ -134,6 +134,11 @@ export default function App() {
     (next: LowCortisolSceneId) => {
       activeSceneRef.current = next;
       if (next === 'arc') {
+        // Explicitly stop any active webcam / mic / audio streams inside the outgoing WebGPU iframe before unmount
+        remoteIframeRef.current?.contentWindow?.postMessage(
+          { type: 'lc:stop-sensors' },
+          window.location.origin
+        );
         initialRemoteDemoRef.current = null;
       } else if (!initialRemoteDemoRef.current) {
         initialRemoteDemoRef.current = getSceneById(next).liveDemoParam ?? 'moss';

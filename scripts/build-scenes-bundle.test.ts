@@ -40,3 +40,26 @@ test('public/scenes contains embedded bridge and bundle-safe AudioWorklet/Breath
   );
   assert.ok(fs.existsSync(path.join(root, 'public/scenes/src/engine/breath-worklet.js')));
 });
+
+test('public/scenes/src/main.js supports extensible per-scene customHandTracking and clean sensor teardown', () => {
+  const root = process.cwd();
+  const mainJs = fs.readFileSync(path.join(root, 'public/scenes/src/main.js'), 'utf8');
+  assert.ok(mainJs.includes('demo.customHandTracking'));
+  assert.ok(mainJs.includes('currentDemo.toggleHands'));
+  assert.ok(mainJs.includes('currentDemo.stopHands'));
+  assert.ok(mainJs.includes('demo.getExtraDockControls'));
+  assert.ok(mainJs.includes("ev.data.type === 'lc:stop-sensors'"));
+  assert.ok(mainJs.includes("window.addEventListener( 'pagehide'"));
+});
+
+test('Arc String uses dedicated src/vision/handTracker.ts with original spec parameters', () => {
+  const root = process.cwd();
+  const trackerTs = fs.readFileSync(path.join(root, 'src/vision/handTracker.ts'), 'utf8');
+  assert.ok(trackerTs.includes("const MP_VERSION = '1.2.3';"));
+  assert.ok(trackerTs.includes('minHandDetectionConfidence: 0.4'));
+  assert.ok(trackerTs.includes('const enterThresh = 0.34;'));
+  assert.ok(trackerTs.includes('const exitThresh = 0.47;'));
+  assert.ok(trackerTs.includes('dTip > dPip * 1.07'));
+  assert.ok(trackerTs.includes('width: { ideal: 1280 }'));
+  assert.ok(trackerTs.includes('height: { ideal: 720 }'));
+});
