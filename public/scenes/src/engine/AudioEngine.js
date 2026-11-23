@@ -26,7 +26,7 @@ export function createAudioEngine() {
 			if ( ! AudioCtx ) throw new Error( 'Web Audio API is not available in this browser.' );
 
 			ctx = new AudioCtx( { latencyHint: 'interactive' } );
-			const workletUrl = new URL( './audio-worklet.js', import.meta.url );
+			const workletUrl = new URL( './src/engine/audio-worklet.js', window.location.href );
 			await ctx.audioWorklet.addModule( workletUrl );
 
 			node = new AudioWorkletNode( ctx, 'collision-audio-processor', {

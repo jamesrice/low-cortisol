@@ -321,7 +321,7 @@ export function createBreathInput( { getAudioOutputLevel = () => 0 } = {} ) {
 
 			const AudioCtx = window.AudioContext || window.webkitAudioContext;
 			ctx = new AudioCtx( { latencyHint: 'interactive' } );
-			const workletUrl = new URL( './breath-worklet.js', import.meta.url );
+			const workletUrl = new URL( './src/engine/breath-worklet.js', window.location.href );
 			await ctx.audioWorklet.addModule( workletUrl );
 
 			source = ctx.createMediaStreamSource( stream );

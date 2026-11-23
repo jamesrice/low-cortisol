@@ -1,0 +1,42 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { rewriteScenesHtmlToBundle } from './build-scenes-bundle.mjs';
+
+test('rewriteScenesHtmlToBundle swaps ./src/main.js to ./bundle.js idempotently', () => {
+  const raw =
+    '<!doctype html><html><head></head><body><script type="module" src="./src/main.js"></script></body></html>';
+  const rewritten = rewriteScenesHtmlToBundle(raw);
+  assert.ok(rewritten.includes('<script type="module" src="./bundle.js"></script>'));
+  assert.ok(!rewritten.includes('./src/main.js'));
+  assert.equal(rewriteScenesHtmlToBundle(rewritten), rewritten);
+
+  const versioned =
+    '<!doctype html><html><body><script type="module" src="./src/main.js?v=13"></script></body></html>';
+  assert.ok(
+    rewriteScenesHtmlToBundle(versioned).includes('<script type="module" src="./bundle.js"></script>')
+  );
+});
+
+test('public/scenes contains embedded bridge and bundle-safe AudioWorklet/BreathWorklet URLs', () => {
+  const root = process.cwd();
+  const scenesHtml = fs.readFileSync(path.join(root, 'public/scenes/index.html'), 'utf8');
+  assert.ok(scenesHtml.includes('id="lc-embed-nav-override"'));
+  assert.ok(scenesHtml.includes('id="lc-embed-nav-bridge"'));
+  assert.ok(scenesHtml.includes('src="./src/main.js"'));
+
+  const audioEngine = fs.readFileSync(path.join(root, 'public/scenes/src/engine/AudioEngine.js'), 'utf8');
+  assert.ok(
+    audioEngine.includes("new URL( './src/engine/audio-worklet.js', window.location.href )"),
+    'AudioEngine must resolve audio-worklet.js from document URL so bundled mode finds it'
+  );
+  assert.ok(fs.existsSync(path.join(root, 'public/scenes/src/engine/audio-worklet.js')));
+
+  const breathInput = fs.readFileSync(path.join(root, 'public/scenes/src/engine/BreathInput.js'), 'utf8');
+  assert.ok(
+    breathInput.includes("new URL( './src/engine/breath-worklet.js', window.location.href )"),
+    'BreathInput must resolve breath-worklet.js from document URL so bundled mode finds it'
+  );
+  assert.ok(fs.existsSync(path.join(root, 'public/scenes/src/engine/breath-worklet.js')));
+});

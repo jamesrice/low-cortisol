@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "collision",
+  "compatibility_date": "2026-04-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+  // Connect a custom domain either in Cloudflare Dashboard (Workers & Pages -> Settings -> Domains & Routes)
+  // or by uncommenting `routes` below and deploying:
+  // "routes": [
+  //   { "pattern": "collision.backlands.com", "custom_domain": true }
+  // ]
+}

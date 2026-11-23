@@ -8,7 +8,6 @@ import { createMossTreeExperience } from './examples/moss-tree/scene.js';
 import { createSnowAndLightExperience } from './examples/snow-and-light/scene.js';
 import { createDogFurExperience } from './examples/dog-fur/scene.js';
 import { createFilmBloomExperience } from './examples/film-bloom/scene.js';
-import { createArcStringExperience } from './examples/arc-string/scene.js';
 
 window.__appBooted = true;
 
@@ -80,15 +79,6 @@ const DEMOS = {
 		themeColor: '#040508',
 		hideCursor: false,
 		hint: 'Tap to drop a water bead · Hold to swell · Glide to swirl iridescent film'
-	},
-	arc: {
-		label: 'Arc String',
-		btn: $( 'btn-demo-arc' ),
-		controls: $( 'arc-only-controls' ),
-		themeClass: 'theme-arc',
-		themeColor: '#050806',
-		hideCursor: false,
-		hint: 'Swipe or pull any electric line to vibrate · Switch to Draw Line or pinch two hands to add lines'
 	}
 };
 
@@ -145,24 +135,6 @@ const rangeFilmRain = $( 'range-film-rain' );
 const valFilmRain = $( 'val-film-rain' );
 const btnFilmDrop = $( 'btn-film-drop' );
 const btnFilmGust = $( 'btn-film-gust' );
-
-// Arc String controls
-const btnArcStrum = $( 'btn-arc-strum' );
-const btnArcDraw = $( 'btn-arc-draw' );
-const arcPaletteButtons = {
-	lime: $( 'btn-arc-lime' ),
-	violet: $( 'btn-arc-violet' ),
-	cyan: $( 'btn-arc-cyan' ),
-	amber: $( 'btn-arc-amber' )
-};
-const rangeArcTension = $( 'range-arc-tension' );
-const valArcTension = $( 'val-arc-tension' );
-const rangeArcReverb = $( 'range-arc-reverb' );
-const valArcReverb = $( 'val-arc-reverb' );
-const rangeArcSparks = $( 'range-arc-sparks' );
-const valArcSparks = $( 'val-arc-sparks' );
-const btnArcPulse = $( 'btn-arc-pulse' );
-const btnArcClear = $( 'btn-arc-clear' );
 
 let currentDemo = null;
 let currentName = 'moss';
@@ -289,19 +261,6 @@ function resetFilmControlUI( surface = 'lake' ) {
 
 }
 
-function resetArcControlUI() {
-
-	setSegmentedActive( [ btnArcStrum, btnArcDraw ], btnArcStrum );
-	setSegmentedActive( Object.values( arcPaletteButtons ), arcPaletteButtons.lime );
-	rangeArcTension.value = '1';
-	valArcTension.textContent = '1.0x';
-	rangeArcReverb.value = '1.15';
-	valArcReverb.textContent = '1.2x';
-	rangeArcSparks.value = '1.1';
-	valArcSparks.textContent = '1.1x';
-
-}
-
 async function mountDemo( name, options = {} ) {
 
 	if ( switching ) return;
@@ -318,7 +277,7 @@ async function mountDemo( name, options = {} ) {
 
 		currentName = name;
 		updateDemoUI( name );
-		audioEngine.setScene( name === 'arc' ? 'snow' : name );
+		audioEngine.setScene( name );
 		errorBanner.hidden = true;
 
 		if ( name === 'snow' ) {
@@ -348,14 +307,6 @@ async function mountDemo( name, options = {} ) {
 				audio: audioEngine
 			} );
 			if ( initialSurface !== 'lake' ) currentDemo.setSurfaceMode( initialSurface );
-
-		} else if ( name === 'arc' ) {
-
-			resetArcControlUI();
-			currentDemo = await createArcStringExperience( {
-				container: stage,
-				audio: audioEngine
-			} );
 
 		} else {
 
@@ -619,43 +570,6 @@ bindRange( rangeFilmRain, valFilmRain, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) =>
 btnFilmDrop.addEventListener( 'click', () => currentDemo?.triggerDropBead?.() );
 btnFilmGust.addEventListener( 'click', () => currentDemo?.triggerMarangoniGust?.() );
 
-// ------------------------------------------------------------ Arc String Controls
-
-btnArcStrum.addEventListener( 'click', () => {
-
-	if ( ! currentDemo?.setMode ) return;
-	currentDemo.setMode( 'strum' );
-	setSegmentedActive( [ btnArcStrum, btnArcDraw ], btnArcStrum );
-
-} );
-
-btnArcDraw.addEventListener( 'click', () => {
-
-	if ( ! currentDemo?.setMode ) return;
-	currentDemo.setMode( 'draw' );
-	setSegmentedActive( [ btnArcStrum, btnArcDraw ], btnArcDraw );
-
-} );
-
-const allArcPaletteBtns = Object.values( arcPaletteButtons );
-for ( const [ paletteKey, btn ] of Object.entries( arcPaletteButtons ) ) {
-
-	btn.addEventListener( 'click', () => {
-
-		if ( ! currentDemo?.setPalette ) return;
-		currentDemo.setPalette( paletteKey );
-		setSegmentedActive( allArcPaletteBtns, btn );
-
-	} );
-
-}
-
-bindRange( rangeArcTension, valArcTension, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setTension?.( v ) );
-bindRange( rangeArcReverb, valArcReverb, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setReverb?.( v ) );
-bindRange( rangeArcSparks, valArcSparks, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setSparks?.( v ) );
-btnArcPulse.addEventListener( 'click', () => currentDemo?.triggerPulse?.() );
-btnArcClear.addEventListener( 'click', () => currentDemo?.clear?.() );
-
 // ------------------------------------------------------------ Global Sensory Dock (Hands, 3-Phase Breath, Audio)
 
 btnAudio.addEventListener( 'click', async () => {
@@ -900,7 +814,6 @@ function resolveInitialDemo( demoFlag ) {
 	if ( demoFlag === 'snow' || demoFlag === 'snow-and-light' || demoFlag === 'light' ) return 'snow';
 	if ( demoFlag === 'dog' || demoFlag === 'fur' || demoFlag === 'dog-fur' || demoFlag === 'petting' ) return 'dog';
 	if ( demoFlag === 'film' || demoFlag === 'film-bloom' || demoFlag === 'thin-film' || demoFlag === 'bloom' || demoFlag === 'lake' ) return 'film';
-	if ( demoFlag === 'arc' || demoFlag === 'arc-string' || demoFlag === 'electric' || demoFlag === 'shock' || demoFlag === 'string' ) return 'arc';
 	return 'moss';
 
 }

@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #050806;
+  --glass: rgba(9, 15, 11, 0.68);
+  --glass-border: rgba(206, 244, 138, 0.18);
+  --text: rgba(242, 248, 236, 0.94);
+  --muted: rgba(196, 212, 184, 0.68);
+  --accent: #c8f542;
+  --accent-warm: #f7f4a8;
+  --accent-soft: rgba(200, 245, 66, 0.2);
+  --accent-hover: rgba(200, 245, 66, 0.13);
+  --accent-border: rgba(200, 245, 66, 0.45);
+  --accent-ink: #0a1205;
+}
+
+body.theme-violet {
+  --bg: #08050b;
+  --glass: rgba(18, 10, 24, 0.7);
+  --glass-border: rgba(236, 156, 255, 0.2);
+  --text: rgba(249, 240, 255, 0.95);
+  --muted: rgba(214, 188, 228, 0.7);
+  --accent: #e879f9;
+  --accent-warm: #fce7ff;
+  --accent-soft: rgba(232, 121, 249, 0.22);
+  --accent-hover: rgba(232, 121, 249, 0.14);
+  --accent-border: rgba(232, 121, 249, 0.48);
+  --accent-ink: #1a061e;
+}
+
+body.theme-cyan {
+  --bg: #04080e;
+  --glass: rgba(8, 16, 26, 0.7);
+  --glass-border: rgba(125, 211, 252, 0.2);
+  --text: rgba(238, 248, 255, 0.95);
+  --muted: rgba(176, 208, 232, 0.7);
+  --accent: #38bdf8;
+  --accent-warm: #dff5ff;
+  --accent-soft: rgba(56, 189, 248, 0.22);
+  --accent-hover: rgba(56, 189, 248, 0.14);
+  --accent-border: rgba(56, 189, 248, 0.48);
+  --accent-ink: #031521;
+}
+
+body.theme-amber {
+  --bg: #0b0704;
+  --glass: rgba(22, 14, 8, 0.7);
+  --glass-border: rgba(251, 191, 36, 0.22);
+  --text: rgba(254, 246, 234, 0.95);
+  --muted: rgba(224, 198, 164, 0.7);
+  --accent: #fbbf24;
+  --accent-warm: #fef3c7;
+  --accent-soft: rgba(251, 191, 36, 0.22);
+  --accent-hover: rgba(251, 191, 36, 0.14);
+  --accent-border: rgba(251, 191, 36, 0.48);
+  --accent-ink: #1c1003;
+}
+
+body.theme-spectrum {
+  --bg: #06070a;
+  --glass: rgba(12, 14, 22, 0.7);
+  --glass-border: rgba(186, 224, 255, 0.2);
+  --text: rgba(244, 248, 255, 0.95);
+  --muted: rgba(190, 204, 224, 0.7);
+  --accent: #7ee8fa;
+  --accent-warm: #f5d0fe;
+  --accent-soft: rgba(126, 232, 250, 0.2);
+  --accent-hover: rgba(126, 232, 250, 0.14);
+  --accent-border: rgba(126, 232, 250, 0.46);
+  --accent-ink: #04131c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono-nums {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Range input matching low-cortisol glass controls */
+.lc-range {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  accent-color: var(--accent);
+  cursor: pointer;
+  touch-action: pan-x;
+}
+
+.lc-glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.38);
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
