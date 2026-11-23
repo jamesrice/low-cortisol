@@ -8,6 +8,7 @@ import { createMossTreeExperience } from './examples/moss-tree/scene.js';
 import { createSnowAndLightExperience } from './examples/snow-and-light/scene.js';
 import { createDogFurExperience } from './examples/dog-fur/scene.js';
 import { createFilmBloomExperience } from './examples/film-bloom/scene.js';
+import { createArcStringExperience } from './examples/arc-string/scene.js';
 
 window.__appBooted = true;
 
@@ -39,8 +40,13 @@ const statBodies = $( 'stat-bodies' );
 const errorBanner = $( 'error-banner' );
 const errorDetail = $( 'error-detail' );
 
+const btnScenePicker = $( 'btn-scene-picker' );
+const scenePickerLabel = $( 'scene-picker-label' );
+const scenePickerMenu = $( 'scene-picker-menu' );
+
 const DEMOS = {
 	moss: {
+		label: 'Moss & Pappus',
 		btn: $( 'btn-demo-moss' ),
 		controls: $( 'moss-only-controls' ),
 		themeClass: 'theme-moss',
@@ -49,6 +55,7 @@ const DEMOS = {
 		hint: 'Move pointer or drag to awaken the moss & swirl pappus · Hold to pulse'
 	},
 	snow: {
+		label: 'Snow & Light',
 		btn: $( 'btn-demo-snow' ),
 		controls: $( 'snow-only-controls' ),
 		themeClass: 'theme-snow',
@@ -57,6 +64,7 @@ const DEMOS = {
 		hint: 'Sweep pointer or finger through the snow · Hold to swell the field'
 	},
 	dog: {
+		label: 'Petting Fur',
 		btn: $( 'btn-demo-dog' ),
 		controls: $( 'dog-only-controls' ),
 		themeClass: 'theme-dog',
@@ -65,12 +73,22 @@ const DEMOS = {
 		hint: 'Pet slowly with one or more fingers to comb & part the coat'
 	},
 	film: {
+		label: 'Film Bloom',
 		btn: $( 'btn-demo-film' ),
 		controls: $( 'film-only-controls' ),
 		themeClass: 'theme-film',
 		themeColor: '#040508',
 		hideCursor: false,
 		hint: 'Tap to drop a water bead · Hold to swell · Glide to swirl iridescent film'
+	},
+	arc: {
+		label: 'Arc String',
+		btn: $( 'btn-demo-arc' ),
+		controls: $( 'arc-only-controls' ),
+		themeClass: 'theme-arc',
+		themeColor: '#050806',
+		hideCursor: false,
+		hint: 'Swipe or pull any electric line to vibrate · Switch to Draw Line or pinch two hands to add lines'
 	}
 };
 
@@ -128,11 +146,30 @@ const valFilmRain = $( 'val-film-rain' );
 const btnFilmDrop = $( 'btn-film-drop' );
 const btnFilmGust = $( 'btn-film-gust' );
 
+// Arc String controls
+const btnArcStrum = $( 'btn-arc-strum' );
+const btnArcDraw = $( 'btn-arc-draw' );
+const arcPaletteButtons = {
+	lime: $( 'btn-arc-lime' ),
+	violet: $( 'btn-arc-violet' ),
+	cyan: $( 'btn-arc-cyan' ),
+	amber: $( 'btn-arc-amber' )
+};
+const rangeArcTension = $( 'range-arc-tension' );
+const valArcTension = $( 'val-arc-tension' );
+const rangeArcReverb = $( 'range-arc-reverb' );
+const valArcReverb = $( 'val-arc-reverb' );
+const rangeArcSparks = $( 'range-arc-sparks' );
+const valArcSparks = $( 'val-arc-sparks' );
+const btnArcPulse = $( 'btn-arc-pulse' );
+const btnArcClear = $( 'btn-arc-clear' );
+
 let currentDemo = null;
 let currentName = 'moss';
 let switching = false;
 let hintTimer = null;
 let toastTimer = null;
+let scenePickerOpen = false;
 
 function showError( err ) {
 
@@ -170,17 +207,26 @@ function showHint( text ) {
 
 }
 
+function setScenePickerOpen( open ) {
+
+	scenePickerOpen = Boolean( open );
+	if ( scenePickerMenu ) scenePickerMenu.hidden = ! scenePickerOpen;
+	if ( btnScenePicker ) btnScenePicker.setAttribute( 'aria-expanded', String( scenePickerOpen ) );
+
+}
+
 function updateDemoUI( name ) {
 
 	const spec = DEMOS[ name ] || DEMOS.moss;
-	document.body.classList.remove( 'theme-moss', 'theme-snow', 'theme-dog', 'theme-film' );
+	document.body.classList.remove( 'theme-moss', 'theme-snow', 'theme-dog', 'theme-film', 'theme-arc' );
 	document.body.classList.add( spec.themeClass );
 	if ( themeMeta ) themeMeta.setAttribute( 'content', spec.themeColor );
+	if ( scenePickerLabel ) scenePickerLabel.textContent = spec.label;
 
 	for ( const [ key, def ] of Object.entries( DEMOS ) ) {
 
-		def.btn.setAttribute( 'aria-pressed', String( key === name ) );
-		def.controls.hidden = key !== name;
+		if ( def.btn ) def.btn.setAttribute( 'aria-selected', String( key === name ) );
+		if ( def.controls ) def.controls.hidden = key !== name;
 
 	}
 
@@ -243,6 +289,19 @@ function resetFilmControlUI( surface = 'lake' ) {
 
 }
 
+function resetArcControlUI() {
+
+	setSegmentedActive( [ btnArcStrum, btnArcDraw ], btnArcStrum );
+	setSegmentedActive( Object.values( arcPaletteButtons ), arcPaletteButtons.lime );
+	rangeArcTension.value = '1';
+	valArcTension.textContent = '1.0x';
+	rangeArcReverb.value = '1.15';
+	valArcReverb.textContent = '1.2x';
+	rangeArcSparks.value = '1.1';
+	valArcSparks.textContent = '1.1x';
+
+}
+
 async function mountDemo( name, options = {} ) {
 
 	if ( switching ) return;
@@ -259,7 +318,7 @@ async function mountDemo( name, options = {} ) {
 
 		currentName = name;
 		updateDemoUI( name );
-		audioEngine.setScene( name );
+		audioEngine.setScene( name === 'arc' ? 'snow' : name );
 		errorBanner.hidden = true;
 
 		if ( name === 'snow' ) {
@@ -289,6 +348,14 @@ async function mountDemo( name, options = {} ) {
 				audio: audioEngine
 			} );
 			if ( initialSurface !== 'lake' ) currentDemo.setSurfaceMode( initialSurface );
+
+		} else if ( name === 'arc' ) {
+
+			resetArcControlUI();
+			currentDemo = await createArcStringExperience( {
+				container: stage,
+				audio: audioEngine
+			} );
 
 		} else {
 
@@ -389,23 +456,76 @@ function bindGameToggle( button ) {
 
 }
 
-// ------------------------------------------------------------ Demo Switcher & Panel
+// ------------------------------------------------------------ Scene Picker & Panel
 
-for ( const [ key, def ] of Object.entries( DEMOS ) ) {
+const demoEntries = Object.entries( DEMOS );
+
+btnScenePicker.addEventListener( 'click', ( e ) => {
+
+	e.stopPropagation();
+	const nextOpen = ! scenePickerOpen;
+	setScenePickerOpen( nextOpen );
+	if ( nextOpen && ! panel.hidden ) {
+
+		panel.hidden = true;
+		btnPanel.setAttribute( 'aria-expanded', 'false' );
+
+	}
+
+} );
+
+for ( const [ key, def ] of demoEntries ) {
 
 	def.btn.addEventListener( 'click', () => {
 
+		setScenePickerOpen( false );
 		if ( currentName !== key ) mountDemo( key );
+		btnScenePicker.focus();
 
 	} );
 
 }
+
+document.addEventListener( 'pointerdown', ( e ) => {
+
+	if ( ! scenePickerOpen ) return;
+	if ( btnScenePicker.contains( e.target ) || scenePickerMenu.contains( e.target ) ) return;
+	setScenePickerOpen( false );
+
+} );
+
+document.addEventListener( 'keydown', ( e ) => {
+
+	if ( ! scenePickerOpen ) return;
+	if ( e.key === 'Escape' ) {
+
+		e.preventDefault();
+		setScenePickerOpen( false );
+		btnScenePicker.focus();
+		return;
+
+	}
+
+	if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
+
+		e.preventDefault();
+		const optionBtns = demoEntries.map( ( [ , def ] ) => def.btn );
+		const focusedIdx = optionBtns.indexOf( document.activeElement );
+		const currentIdx = focusedIdx >= 0 ? focusedIdx : demoEntries.findIndex( ( [ k ] ) => k === currentName );
+		const step = e.key === 'ArrowDown' ? 1 : - 1;
+		const nextIdx = ( currentIdx + step + optionBtns.length ) % optionBtns.length;
+		optionBtns[ nextIdx ]?.focus();
+
+	}
+
+} );
 
 btnPanel.addEventListener( 'click', () => {
 
 	const open = panel.hidden;
 	panel.hidden = ! open;
 	btnPanel.setAttribute( 'aria-expanded', String( open ) );
+	if ( open && scenePickerOpen ) setScenePickerOpen( false );
 
 } );
 
@@ -498,6 +618,43 @@ bindRange( rangeFilmViscosity, valFilmViscosity, ( v ) => `${ v.toFixed( 1 ) }x`
 bindRange( rangeFilmRain, valFilmRain, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setRainRate?.( v ) );
 btnFilmDrop.addEventListener( 'click', () => currentDemo?.triggerDropBead?.() );
 btnFilmGust.addEventListener( 'click', () => currentDemo?.triggerMarangoniGust?.() );
+
+// ------------------------------------------------------------ Arc String Controls
+
+btnArcStrum.addEventListener( 'click', () => {
+
+	if ( ! currentDemo?.setMode ) return;
+	currentDemo.setMode( 'strum' );
+	setSegmentedActive( [ btnArcStrum, btnArcDraw ], btnArcStrum );
+
+} );
+
+btnArcDraw.addEventListener( 'click', () => {
+
+	if ( ! currentDemo?.setMode ) return;
+	currentDemo.setMode( 'draw' );
+	setSegmentedActive( [ btnArcStrum, btnArcDraw ], btnArcDraw );
+
+} );
+
+const allArcPaletteBtns = Object.values( arcPaletteButtons );
+for ( const [ paletteKey, btn ] of Object.entries( arcPaletteButtons ) ) {
+
+	btn.addEventListener( 'click', () => {
+
+		if ( ! currentDemo?.setPalette ) return;
+		currentDemo.setPalette( paletteKey );
+		setSegmentedActive( allArcPaletteBtns, btn );
+
+	} );
+
+}
+
+bindRange( rangeArcTension, valArcTension, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setTension?.( v ) );
+bindRange( rangeArcReverb, valArcReverb, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setReverb?.( v ) );
+bindRange( rangeArcSparks, valArcSparks, ( v ) => `${ v.toFixed( 1 ) }x`, ( v ) => currentDemo?.setSparks?.( v ) );
+btnArcPulse.addEventListener( 'click', () => currentDemo?.triggerPulse?.() );
+btnArcClear.addEventListener( 'click', () => currentDemo?.clear?.() );
 
 // ------------------------------------------------------------ Global Sensory Dock (Hands, 3-Phase Breath, Audio)
 
@@ -743,6 +900,7 @@ function resolveInitialDemo( demoFlag ) {
 	if ( demoFlag === 'snow' || demoFlag === 'snow-and-light' || demoFlag === 'light' ) return 'snow';
 	if ( demoFlag === 'dog' || demoFlag === 'fur' || demoFlag === 'dog-fur' || demoFlag === 'petting' ) return 'dog';
 	if ( demoFlag === 'film' || demoFlag === 'film-bloom' || demoFlag === 'thin-film' || demoFlag === 'bloom' || demoFlag === 'lake' ) return 'film';
+	if ( demoFlag === 'arc' || demoFlag === 'arc-string' || demoFlag === 'electric' || demoFlag === 'shock' || demoFlag === 'string' ) return 'arc';
 	return 'moss';
 
 }
