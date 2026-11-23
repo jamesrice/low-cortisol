@@ -140,6 +140,7 @@ const btnFilmGust = $( 'btn-film-gust' );
 let currentDemo = null;
 let currentName = 'moss';
 let switching = false;
+let pendingDemo = null;
 let hintTimer = null;
 let toastTimer = null;
 let scenePickerOpen = false;
@@ -353,8 +354,14 @@ function resetFilmControlUI( surface = 'lake' ) {
 
 async function mountDemo( name, options = {} ) {
 
-	if ( switching ) return;
+	if ( switching ) {
+
+		pendingDemo = { name, options };
+		return;
+
+	}
 	switching = true;
+	pendingDemo = null;
 
 	try {
 
@@ -436,6 +443,17 @@ async function mountDemo( name, options = {} ) {
 	} finally {
 
 		switching = false;
+		if ( pendingDemo ) {
+
+			const next = pendingDemo;
+			pendingDemo = null;
+			if ( next.name !== currentName ) {
+
+				void mountDemo( next.name, next.options );
+
+			}
+
+		}
 
 	}
 
@@ -538,7 +556,7 @@ for ( const [ key, def ] of demoEntries ) {
 	def.btn.addEventListener( 'click', () => {
 
 		setScenePickerOpen( false );
-		if ( currentName !== key ) mountDemo( key );
+		if ( currentName !== key || switching ) mountDemo( key );
 		btnScenePicker.focus();
 
 	} );
@@ -970,4 +988,6 @@ function resolveInitialDemo( demoFlag ) {
 
 }
 
-mountDemo( resolveInitialDemo( flags.demo ), { breed: requestedBreed, surface: requestedSurface } );
+const initialDemo = resolveInitialDemo( window.__pendingScene || flags.demo );
+window.__pendingScene = null;
+mountDemo( initialDemo, { breed: requestedBreed, surface: requestedSurface } );

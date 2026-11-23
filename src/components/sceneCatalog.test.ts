@@ -30,10 +30,10 @@ test('resolveSceneFromQuery maps URL aliases cleanly', () => {
   assert.equal(resolveSceneFromQuery(null), 'arc');
 });
 
-test('buildEmbeddedSceneUrl targets self-hosted /scenes/index.html and forwards allowlisted flags only', () => {
-  assert.equal(buildEmbeddedSceneUrl('moss'), '/scenes/index.html?demo=moss');
+test('buildEmbeddedSceneUrl targets self-hosted /scenes/ and forwards allowlisted flags only', () => {
+  assert.equal(buildEmbeddedSceneUrl('moss'), '/scenes/?demo=moss');
   assert.equal(
     buildEmbeddedSceneUrl('dog', '?demo=dog&breed=husky&webgl=1&q=high&evil=drop'),
-    '/scenes/index.html?demo=dog&breed=husky&webgl=1&q=high'
+    '/scenes/?demo=dog&breed=husky&webgl=1&q=high'
   );
 });

@@ -918,6 +918,7 @@
 				} else if (ev.data.type === 'lc:select-scene') {
 					var scene = typeof ev.data.scene === 'string' ? ev.data.scene : '';
 					if (VALID_SCENES[scene]) {
+						window.__pendingScene = scene;
 						var sceneBtn = document.getElementById('btn-demo-' + scene);
 						if (sceneBtn) sceneBtn.click();
 						var panelEl = document.getElementById('hud-panel');

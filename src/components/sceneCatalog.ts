@@ -87,5 +87,5 @@ export function buildEmbeddedSceneUrl(demoParam: string, currentSearch = ''): st
       }
     }
   }
-  return `/scenes/index.html?${params.toString()}`;
+  return `/scenes/?${params.toString()}`;
 }
