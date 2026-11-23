@@ -83,6 +83,20 @@
 			--accent-ink: #041316;
 		}
 
+		body.theme-arc {
+			--bg: #050806;
+			--glass: rgba(9, 15, 11, 0.68);
+			--glass-border: rgba(206, 244, 138, 0.18);
+			--text: rgba(242, 248, 236, 0.94);
+			--muted: rgba(196, 212, 184, 0.68);
+			--accent: #c8f542;
+			--accent-warm: #f7f4a8;
+			--accent-soft: rgba(200, 245, 66, 0.20);
+			--accent-hover: rgba(200, 245, 66, 0.13);
+			--accent-border: rgba(200, 245, 66, 0.45);
+			--accent-ink: #0a1205;
+		}
+
 		* {
 			box-sizing: border-box;
 		}
@@ -149,17 +163,142 @@
 		}
 
 		.hud-bar {
+			position: relative;
 			display: flex;
 			align-items: center;
 			gap: 4px;
 			padding: 4px;
 			max-width: calc(100vw - 32px);
-			overflow-x: auto;
-			scrollbar-width: none;
+			overflow: visible;
 		}
 
-		.hud-bar::-webkit-scrollbar {
+		.scene-picker {
+			position: relative;
+			display: flex;
+			align-items: center;
+		}
+
+		.scene-picker-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			color: var(--text);
+			font-weight: 600;
+		}
+
+		.scene-picker-btn[aria-expanded="true"] {
+			background: var(--accent-soft);
+			color: var(--accent);
+		}
+
+		.scene-picker-chevron {
+			width: 14px;
+			height: 14px;
+			stroke: currentColor;
+			fill: none;
+			stroke-width: 2;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+			opacity: 0.75;
+			transition: transform 0.16s ease;
+		}
+
+		.scene-picker-btn[aria-expanded="true"] .scene-picker-chevron {
+			transform: rotate(180deg);
+		}
+
+		.scene-picker-menu {
+			position: absolute;
+			top: calc(100% + 8px);
+			left: 0;
+			z-index: 30;
+			width: 244px;
+			margin: 0;
+			padding: 6px;
+			list-style: none;
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+			background: var(--glass);
+			border: 1px solid var(--glass-border);
+			backdrop-filter: blur(16px);
+			-webkit-backdrop-filter: blur(16px);
+			border-radius: 12px;
+			box-shadow: 0 14px 36px rgba(0, 0, 0, 0.44);
+		}
+
+		.scene-picker-menu[hidden] {
 			display: none;
+		}
+
+		.scene-option {
+			appearance: none;
+			width: 100%;
+			border: 0;
+			background: transparent;
+			color: var(--text);
+			text-align: left;
+			padding: 8px 10px;
+			border-radius: 8px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+			cursor: pointer;
+			transition: background 0.15s ease, color 0.15s ease;
+		}
+
+		.scene-option:hover,
+		.scene-option:focus-visible {
+			background: rgba(255, 255, 255, 0.08);
+			outline: none;
+		}
+
+		.scene-option[aria-selected="true"] {
+			background: var(--accent-soft);
+			color: var(--accent);
+		}
+
+		.scene-option-copy {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+			min-width: 0;
+		}
+
+		.scene-option-name {
+			font-size: 12px;
+			font-weight: 600;
+			line-height: 1.2;
+		}
+
+		.scene-option-desc {
+			font-size: 11px;
+			color: var(--muted);
+			line-height: 1.25;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.scene-option-check {
+			width: 14px;
+			height: 14px;
+			stroke: var(--accent);
+			fill: none;
+			stroke-width: 2.2;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+			flex-shrink: 0;
+			opacity: 0;
+		}
+
+		.scene-option[aria-selected="true"] .scene-option-check {
+			opacity: 1;
+		}
+
+		.segmented-4 {
+			grid-template-columns: repeat(4, 1fr);
 		}
 
 		.hud-btn {
@@ -683,15 +822,9 @@
 				width: 100%;
 				max-width: none;
 				justify-content: space-between;
-				gap: 2px;
-				padding: 3px;
-				overflow-x: auto;
-				scrollbar-width: none;
-				-webkit-overflow-scrolling: touch;
-			}
-
-			.hud-bar::-webkit-scrollbar {
-				display: none;
+				gap: 4px;
+				padding: 4px;
+				overflow: visible;
 			}
 
 			.hud-btn {
@@ -747,10 +880,68 @@
 
 	<aside class="hud" aria-label="Engine controls">
 		<div class="hud-bar">
-			<button id="btn-demo-moss" class="hud-btn" type="button" aria-pressed="true">Moss &amp; Pappus</button>
-			<button id="btn-demo-snow" class="hud-btn" type="button" aria-pressed="false">Snow &amp; Light</button>
-			<button id="btn-demo-dog" class="hud-btn" type="button" aria-pressed="false">Petting Fur</button>
-			<button id="btn-demo-film" class="hud-btn" type="button" aria-pressed="false">Film Bloom</button>
+			<div class="scene-picker">
+				<button
+					id="btn-scene-picker"
+					class="hud-btn scene-picker-btn"
+					type="button"
+					aria-haspopup="listbox"
+					aria-expanded="false"
+					aria-controls="scene-picker-menu"
+				>
+					<span id="scene-picker-label">Moss &amp; Pappus</span>
+					<svg class="scene-picker-chevron" viewBox="0 0 24 24" aria-hidden="true">
+						<path d="m6 9 6 6 6-6"/>
+					</svg>
+				</button>
+				<ul id="scene-picker-menu" class="scene-picker-menu" role="listbox" aria-label="Choose scene" hidden>
+					<li role="none">
+						<button id="btn-demo-moss" class="scene-option" type="button" role="option" data-demo="moss" aria-selected="true">
+							<span class="scene-option-copy">
+								<span class="scene-option-name">Moss &amp; Pappus</span>
+								<span class="scene-option-desc">Macro mossy trunk &amp; dandelion seeds</span>
+							</span>
+							<svg class="scene-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+						</button>
+					</li>
+					<li role="none">
+						<button id="btn-demo-snow" class="scene-option" type="button" role="option" data-demo="snow" aria-selected="false">
+							<span class="scene-option-copy">
+								<span class="scene-option-name">Snow &amp; Light</span>
+								<span class="scene-option-desc">Frozen-glass drift &amp; light shafts</span>
+							</span>
+							<svg class="scene-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+						</button>
+					</li>
+					<li role="none">
+						<button id="btn-demo-dog" class="scene-option" type="button" role="option" data-demo="dog" aria-selected="false">
+							<span class="scene-option-copy">
+								<span class="scene-option-name">Petting Fur</span>
+								<span class="scene-option-desc">Multi-touch tactile coat simulation</span>
+							</span>
+							<svg class="scene-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+						</button>
+					</li>
+					<li role="none">
+						<button id="btn-demo-film" class="scene-option" type="button" role="option" data-demo="film" aria-selected="false">
+							<span class="scene-option-copy">
+								<span class="scene-option-name">Film Bloom</span>
+								<span class="scene-option-desc">Iridescent thin-film water optics</span>
+							</span>
+							<svg class="scene-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+						</button>
+					</li>
+					<li role="none">
+						<button id="btn-demo-arc" class="scene-option" type="button" role="option" data-demo="arc" aria-selected="false">
+							<span class="scene-option-copy">
+								<span class="scene-option-name">Arc String</span>
+								<span class="scene-option-desc">Electric spring-mass plasma lines</span>
+							</span>
+							<svg class="scene-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+						</button>
+					</li>
+				</ul>
+			</div>
 			<span class="hud-divider" aria-hidden="true"></span>
 			<button id="btn-toggle-panel" class="hud-btn" type="button" aria-expanded="false" aria-controls="hud-panel">Controls</button>
 		</div>
@@ -914,6 +1105,55 @@
 				</div>
 			</div>
 
+			<div id="arc-only-controls" class="scene-controls" hidden>
+				<div class="control-row">
+					<div class="control-header"><strong>Interaction Mode</strong></div>
+					<div class="segmented">
+						<button id="btn-arc-strum" type="button" aria-pressed="true">Strum &amp; Pull</button>
+						<button id="btn-arc-draw" type="button" aria-pressed="false">Draw Line</button>
+					</div>
+				</div>
+
+				<div class="control-row">
+					<div class="control-header"><strong>Electric Color</strong></div>
+					<div class="segmented segmented-4">
+						<button id="btn-arc-lime" type="button" aria-pressed="true">Lime</button>
+						<button id="btn-arc-violet" type="button" aria-pressed="false">Violet</button>
+						<button id="btn-arc-cyan" type="button" aria-pressed="false">Cyan</button>
+						<button id="btn-arc-amber" type="button" aria-pressed="false">Amber</button>
+					</div>
+				</div>
+
+				<div class="control-row">
+					<div class="control-header">
+						<strong>String Tension</strong>
+						<span id="val-arc-tension">1.0x</span>
+					</div>
+					<input id="range-arc-tension" type="range" min="0.4" max="2.0" step="0.05" value="1">
+				</div>
+
+				<div class="control-row">
+					<div class="control-header">
+						<strong>Reverb Sustain</strong>
+						<span id="val-arc-reverb">1.2x</span>
+					</div>
+					<input id="range-arc-reverb" type="range" min="0.4" max="2.0" step="0.05" value="1.15">
+				</div>
+
+				<div class="control-row">
+					<div class="control-header">
+						<strong>Spark Shower</strong>
+						<span id="val-arc-sparks">1.1x</span>
+					</div>
+					<input id="range-arc-sparks" type="range" min="0" max="2.0" step="0.05" value="1.1">
+				</div>
+
+				<div class="action-row">
+					<button id="btn-arc-pulse" class="action-btn" type="button">Strum All</button>
+					<button id="btn-arc-clear" class="action-btn" type="button">Clear</button>
+				</div>
+			</div>
+
 			<div class="stats-line">
 				<span id="stat-backend">initializing…</span>
 				<span id="stat-fps">-- fps</span>
@@ -1040,6 +1280,6 @@
 
 		} )();
 	</script>
-	<script type="module" src="./src/main.js?v=12"></script>
+	<script type="module" src="./src/main.js?v=13"></script>
 </body>
 </html>
