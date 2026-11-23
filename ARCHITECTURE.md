@@ -26,7 +26,7 @@ In development (`npm run dev`), Vite serves `public/scenes/` verbatim as native 
 
 Motion tracking is isolated per scene so each experience can own its gestures, overlays, and dock controls without interfering with other scenes:
 
-- **Arc String (`motionTracker: 'arc-custom'`)** uses its dedicated [`src/vision/handTracker.ts`](src/vision/handTracker.ts) (`1280×720` cover-fit 21-landmark mapping, `0.34`/`0.47` OK-pinch hysteresis, single-hand anchor drag, two-hand pinch draw, extended fingertip strumming) paired with the `Tracker Rig` / `Gossamer` overlays and `Camera Mirror` / `Studio Dark` Self-View backdrop in [`src/renderer/canvasRenderer.ts`](src/renderer/canvasRenderer.ts).
+- **Arc String (`motionTracker: 'arc-custom'`)** uses its dedicated [`src/vision/handTracker.ts`](src/vision/handTracker.ts) (`1280×720` cover-fit 21-landmark mapping, `0.34`/`0.47` OK-pinch hysteresis, single-hand anchor drag, two-hand pinch draw, extended fingertip strumming) paired with the `Tracker Rig` / `Gossamer` overlays and 3-state Camera View (`Full View` / `50%` / `Off`) in [`src/renderer/canvasRenderer.ts`](src/renderer/canvasRenderer.ts).
 - **WebGPU Scenes (`moss`, `snow`, `dog`, `film`, `motionTracker: 'engine-default'`)** continue using [`public/scenes/src/engine/HandInput.js`](public/scenes/src/engine/HandInput.js) unchanged (gossamer overlay, Z-depth pressure aura, posture detection, bottom-left status chip).
 - **Extensible WebGPU Scene Opt-In (`public/scenes/src/main.js`)**: Any scene returned by `create*Experience()` can opt out of `HandInput.js` by exposing:
   - `customHandTracking: true`

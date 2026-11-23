@@ -31,8 +31,10 @@ import {
   type Vec2,
 } from './physics/electricString';
 import {
+  getNextCameraViewMode,
   renderElectricScene,
   type ActiveCursorVisual,
+  type CameraViewMode,
   type PreviewLine,
   type SkeletonStyle,
 } from './renderer/canvasRenderer';
@@ -93,7 +95,7 @@ export default function App() {
   const [handsActive, setHandsActive] = useState<boolean>(false);
   const [handsLoading, setHandsLoading] = useState<boolean>(false);
   const [handsCount, setHandsCount] = useState<number>(0);
-  const [showCameraBackdrop, setShowCameraBackdrop] = useState<boolean>(true);
+  const [cameraViewMode, setCameraViewMode] = useState<CameraViewMode>('full');
   const [skeletonStyle, setSkeletonStyle] = useState<SkeletonStyle>('tracker');
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -106,7 +108,7 @@ export default function App() {
   const configRef = useRef<SimConfig>(DEFAULT_SIM_CONFIG);
   const modeRef = useRef<InteractionMode>('strum');
   const paletteRef = useRef<ElectricPaletteId>('lime');
-  const showCameraRef = useRef<boolean>(true);
+  const cameraViewModeRef = useRef<CameraViewMode>('full');
   const skeletonStyleRef = useRef<SkeletonStyle>('tracker');
   const audioRef = useRef<ElectricAudioController | null>(null);
   const trackerRef = useRef<HandTrackerController | null>(null);
@@ -222,8 +224,38 @@ export default function App() {
   }, [mode]);
 
   useEffect(() => {
-    showCameraRef.current = showCameraBackdrop;
-  }, [showCameraBackdrop]);
+    cameraViewModeRef.current = cameraViewMode;
+  }, [cameraViewMode]);
+
+  const handleCameraViewModeChange = useCallback(
+    (next: CameraViewMode) => {
+      setCameraViewMode(next);
+      showToast(
+        next === 'full'
+          ? 'Camera: Full View'
+          : next === 'dim'
+            ? 'Camera: 50% Opacity'
+            : 'Camera: Off',
+        1800
+      );
+    },
+    [showToast]
+  );
+
+  const handleCycleCameraViewMode = useCallback(() => {
+    setCameraViewMode((prev) => {
+      const next = getNextCameraViewMode(prev);
+      showToast(
+        next === 'full'
+          ? 'Camera: Full View'
+          : next === 'dim'
+            ? 'Camera: 50% Opacity'
+            : 'Camera: Off',
+        1800
+      );
+      return next;
+    });
+  }, [showToast]);
 
   useEffect(() => {
     skeletonStyleRef.current = skeletonStyle;
@@ -611,7 +643,7 @@ export default function App() {
         previewLine,
         hands,
         video: handSnap.video,
-        showCameraBackdrop: showCameraRef.current && handSnap.active,
+        cameraViewMode: handSnap.active ? cameraViewModeRef.current : 'off',
         skeletonStyle: skeletonStyleRef.current,
         cursor: cursorVisualRef.current,
         humIntensity: sim.proximityResonance.intensity,
@@ -809,6 +841,7 @@ export default function App() {
       data-plucks={stats.totalPlucks}
       data-hum-intensity={humIntensity}
       data-hands={handsActive ? 'on' : 'off'}
+      data-camera-mode={cameraViewMode}
     >
       <canvas
         ref={canvasRef}
@@ -844,8 +877,9 @@ export default function App() {
           handsLoading={handsLoading}
           handsCount={handsCount}
           onToggleHands={handleToggleHands}
-          showCameraBackdrop={showCameraBackdrop}
-          onToggleCameraBackdrop={() => setShowCameraBackdrop((v) => !v)}
+          cameraViewMode={cameraViewMode}
+          onCameraViewModeChange={handleCameraViewModeChange}
+          onCycleCameraViewMode={handleCycleCameraViewMode}
           skeletonStyle={skeletonStyle}
           onSkeletonStyleChange={setSkeletonStyle}
           audioEnabled={audioEnabled}

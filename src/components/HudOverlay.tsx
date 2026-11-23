@@ -1,6 +1,6 @@
 import { Hand, SlidersHorizontal, Sparkles, Trash2, Video, VideoOff, Volume2, VolumeX } from 'lucide-react';
 import type { ElectricPaletteId, SimConfig, StringPresetId } from '../physics/electricString';
-import type { SkeletonStyle } from '../renderer/canvasRenderer';
+import type { CameraViewMode, SkeletonStyle } from '../renderer/canvasRenderer';
 import type { LowCortisolSceneId } from './sceneCatalog';
 import { ScenePicker } from './ScenePicker';
 
@@ -31,8 +31,9 @@ export interface HudOverlayProps {
   handsLoading: boolean;
   handsCount: number;
   onToggleHands: () => void;
-  showCameraBackdrop: boolean;
-  onToggleCameraBackdrop: () => void;
+  cameraViewMode: CameraViewMode;
+  onCameraViewModeChange: (mode: CameraViewMode) => void;
+  onCycleCameraViewMode: () => void;
   skeletonStyle: SkeletonStyle;
   onSkeletonStyleChange: (style: SkeletonStyle) => void;
   audioEnabled: boolean;
@@ -56,6 +57,12 @@ const PRESET_OPTIONS: ReadonlyArray<{ id: StringPresetId; label: string }> = [
   { id: 'prism', label: 'Prism' },
 ];
 
+const CAMERA_VIEW_OPTIONS: ReadonlyArray<{ id: CameraViewMode; label: string }> = [
+  { id: 'full', label: 'Full View' },
+  { id: 'dim', label: '50%' },
+  { id: 'off', label: 'Off' },
+];
+
 export function HudOverlay({
   activeScene,
   onSelectScene,
@@ -75,8 +82,9 @@ export function HudOverlay({
   handsLoading,
   handsCount,
   onToggleHands,
-  showCameraBackdrop,
-  onToggleCameraBackdrop,
+  cameraViewMode,
+  onCameraViewModeChange,
+  onCycleCameraViewMode,
   skeletonStyle,
   onSkeletonStyleChange,
   audioEnabled,
@@ -136,15 +144,6 @@ export function HudOverlay({
           </button>
 
           <div className="w-px h-4 bg-[var(--glass-border)] mx-0.5 shrink-0" aria-hidden="true" />
-
-          <button
-            type="button"
-            onClick={onPulseAll}
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Pulse</span>
-          </button>
 
           <button
             type="button"
@@ -316,33 +315,24 @@ export function HudOverlay({
                 </button>
               </div>
               <div className="flex items-center justify-between text-[var(--muted)] pt-0.5">
-                <strong className="font-medium text-[var(--text)]">Self-View</strong>
+                <strong className="font-medium text-[var(--text)]">Camera View</strong>
               </div>
-              <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-black/35">
-                <button
-                  type="button"
-                  onClick={() => { if (!showCameraBackdrop) onToggleCameraBackdrop(); }}
-                  aria-pressed={showCameraBackdrop}
-                  className={`py-1.5 px-2 text-[11px] rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                    showCameraBackdrop
-                      ? 'bg-[var(--accent-soft)] text-[var(--accent)] font-semibold'
-                      : 'text-[var(--muted)] hover:text-[var(--text)]'
-                  }`}
-                >
-                  Camera Mirror
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { if (showCameraBackdrop) onToggleCameraBackdrop(); }}
-                  aria-pressed={!showCameraBackdrop}
-                  className={`py-1.5 px-2 text-[11px] rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                    !showCameraBackdrop
-                      ? 'bg-[var(--accent-soft)] text-[var(--accent)] font-semibold'
-                      : 'text-[var(--muted)] hover:text-[var(--text)]'
-                  }`}
-                >
-                  Studio Dark
-                </button>
+              <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-black/35">
+                {CAMERA_VIEW_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => onCameraViewModeChange(opt.id)}
+                    aria-pressed={cameraViewMode === opt.id}
+                    className={`py-1.5 px-1.5 text-[11px] rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                      cameraViewMode === opt.id
+                        ? 'bg-[var(--accent-soft)] text-[var(--accent)] font-semibold'
+                        : 'text-[var(--muted)] hover:text-[var(--text)]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -386,21 +376,51 @@ export function HudOverlay({
         {handsActive && (
           <button
             type="button"
-            onClick={onToggleCameraBackdrop}
-            aria-pressed={showCameraBackdrop}
-            aria-label={showCameraBackdrop ? 'Hide webcam backdrop' : 'Show webcam backdrop'}
-            title={showCameraBackdrop ? 'Camera Mirror (On)' : 'Studio Dark (Camera Hidden)'}
-            className={`lc-glass pointer-events-auto w-11 h-11 sm:w-10 sm:h-10 rounded-full inline-flex items-center justify-center transition-all cursor-pointer ${
-              showCameraBackdrop
+            onClick={onCycleCameraViewMode}
+            data-camera-mode={cameraViewMode}
+            aria-pressed={cameraViewMode !== 'off'}
+            aria-label={
+              cameraViewMode === 'full'
+                ? 'Camera view: Full View (click for 50% opacity)'
+                : cameraViewMode === 'dim'
+                  ? 'Camera view: 50% Opacity (click for Off)'
+                  : 'Camera view: Off (click for Full View)'
+            }
+            title={
+              cameraViewMode === 'full'
+                ? 'Camera: Full View (click for 50% opacity)'
+                : cameraViewMode === 'dim'
+                  ? 'Camera: 50% Opacity (click for Off)'
+                  : 'Camera: Off (click for Full View)'
+            }
+            className={`lc-glass relative pointer-events-auto w-11 h-11 sm:w-10 sm:h-10 rounded-full inline-flex items-center justify-center transition-all cursor-pointer ${
+              cameraViewMode === 'full'
                 ? 'bg-[var(--accent-soft)]! border-[var(--accent-border)]! text-[var(--accent)]'
-                : 'text-[var(--muted)] hover:text-[var(--text)]'
+                : cameraViewMode === 'dim'
+                  ? 'bg-[var(--accent-soft)]! border-[var(--accent-border)]! text-[var(--accent)] opacity-80'
+                  : 'text-[var(--muted)] hover:text-[var(--text)]'
             }`}
           >
-            {showCameraBackdrop ? (
-              <Video className="w-[18px] h-[18px]" aria-hidden="true" />
-            ) : (
+            {cameraViewMode === 'off' ? (
               <VideoOff className="w-[18px] h-[18px]" aria-hidden="true" />
+            ) : (
+              <Video className="w-[18px] h-[18px]" aria-hidden="true" />
             )}
+            <span
+              className="absolute bottom-[4px] left-1/2 -translate-x-1/2 flex gap-[3px] pointer-events-none"
+              aria-hidden="true"
+            >
+              <span
+                className={`w-[3.5px] h-[3.5px] rounded-full bg-current transition-opacity ${
+                  cameraViewMode === 'off' ? 'opacity-25' : 'opacity-95'
+                }`}
+              />
+              <span
+                className={`w-[3.5px] h-[3.5px] rounded-full bg-current transition-opacity ${
+                  cameraViewMode === 'full' ? 'opacity-95' : 'opacity-25'
+                }`}
+              />
+            </span>
           </button>
         )}
 

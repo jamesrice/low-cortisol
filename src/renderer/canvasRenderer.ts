@@ -10,6 +10,20 @@ import { HAND_CONNECTIONS, type TrackedHand } from '../vision/handTracker';
 
 export type SkeletonStyle = 'tracker' | 'gossamer';
 
+export type CameraViewMode = 'full' | 'dim' | 'off';
+
+export function getCameraViewOpacity(mode: CameraViewMode): number {
+  if (mode === 'full') return 1;
+  if (mode === 'dim') return 0.5;
+  return 0;
+}
+
+export function getNextCameraViewMode(mode: CameraViewMode): CameraViewMode {
+  if (mode === 'full') return 'dim';
+  if (mode === 'dim') return 'off';
+  return 'full';
+}
+
 export interface PreviewLine {
   start: Vec2;
   end: Vec2;
@@ -33,7 +47,7 @@ export interface RenderOptions {
   previewLine: PreviewLine | null;
   hands: TrackedHand[];
   video: HTMLVideoElement | null;
-  showCameraBackdrop: boolean;
+  cameraViewMode: CameraViewMode;
   skeletonStyle: SkeletonStyle;
   cursor: ActiveCursorVisual | null;
   humIntensity?: number;
@@ -122,7 +136,8 @@ function drawCoverVideo(
   ctx: CanvasRenderingContext2D,
   video: HTMLVideoElement,
   width: number,
-  height: number
+  height: number,
+  opacity: number
 ): void {
   const vw = video.videoWidth || 640;
   const vh = video.videoHeight || 360;
@@ -134,12 +149,14 @@ function drawCoverVideo(
 
   ctx.save();
   // Mirror horizontally for natural front-camera interaction
+  ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
   ctx.translate(width, 0);
   ctx.scale(-1, 1);
   ctx.drawImage(video, width - (offsetX + drawW), offsetY, drawW, drawH);
   ctx.restore();
 
   // Subtle contrast vignette scrim so luminous electric plasma pops crisply over bright rooms
+  const scrimScale = 0.55 + 0.45 * Math.max(0, Math.min(1, opacity));
   const grad = ctx.createRadialGradient(
     width * 0.5,
     height * 0.5,
@@ -148,8 +165,8 @@ function drawCoverVideo(
     height * 0.5,
     Math.max(width, height) * 0.78
   );
-  grad.addColorStop(0, 'rgba(4, 6, 8, 0.18)');
-  grad.addColorStop(1, 'rgba(4, 6, 8, 0.56)');
+  grad.addColorStop(0, `rgba(4, 6, 8, ${(0.18 * scrimScale).toFixed(3)})`);
+  grad.addColorStop(1, `rgba(4, 6, 8, ${(0.56 * scrimScale).toFixed(3)})`);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, width, height);
 }
@@ -1086,7 +1103,7 @@ export function renderElectricScene(
     previewLine,
     hands,
     video,
-    showCameraBackdrop,
+    cameraViewMode,
     skeletonStyle,
     cursor,
     humIntensity,
@@ -1098,8 +1115,12 @@ export function renderElectricScene(
   let aggregateEnergy = 0;
   for (const s of state.strings) aggregateEnergy += s.energy;
 
-  if (showCameraBackdrop && video && video.readyState >= 2) {
-    drawCoverVideo(ctx, video, width, height);
+  const videoOpacity = getCameraViewOpacity(cameraViewMode);
+  if (videoOpacity > 0 && video && video.readyState >= 2) {
+    if (videoOpacity < 1) {
+      drawStudioBackdrop(ctx, width, height, activePalette, aggregateEnergy);
+    }
+    drawCoverVideo(ctx, video, width, height, videoOpacity);
   } else {
     drawStudioBackdrop(ctx, width, height, activePalette, aggregateEnergy);
   }

@@ -4,6 +4,8 @@ import {
   HIGH_PROXIMITY_HUM_THRESHOLD,
   computeInterferenceShimmer,
   computeProximityResonanceOpacity,
+  getCameraViewOpacity,
+  getNextCameraViewMode,
   mixHexColor,
 } from './canvasRenderer';
 
@@ -70,4 +72,14 @@ test('mixHexColor interpolates RGB channels cleanly and clamps endpoints', () =>
   assert.equal(mixHexColor('#000000', '#ffffff', 0.5), '#808080');
   assert.equal(mixHexColor('#ff0000', '#0000ff', -1), '#ff0000');
   assert.equal(mixHexColor('#ff0000', '#0000ff', 2), '#0000ff');
+});
+
+test('three-state camera view mode maps opacities and cycles full -> dim -> off -> full', () => {
+  assert.equal(getCameraViewOpacity('full'), 1);
+  assert.equal(getCameraViewOpacity('dim'), 0.5);
+  assert.equal(getCameraViewOpacity('off'), 0);
+
+  assert.equal(getNextCameraViewMode('full'), 'dim');
+  assert.equal(getNextCameraViewMode('dim'), 'off');
+  assert.equal(getNextCameraViewMode('off'), 'full');
 });
