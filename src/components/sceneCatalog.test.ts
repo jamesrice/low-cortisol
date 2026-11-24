@@ -8,11 +8,11 @@ import {
   resolveSceneFromQuery,
 } from './sceneCatalog';
 
-test('LOW_CORTISOL_SCENES includes all four original scenes plus Arc String', () => {
+test('LOW_CORTISOL_SCENES puts Moss & Pappus first and includes all five scenes', () => {
   const ids = LOW_CORTISOL_SCENES.map((s) => s.id);
-  assert.deepEqual(ids, ['arc', 'moss', 'snow', 'dog', 'film']);
-  assert.equal(getSceneById('arc').name, 'Arc String');
+  assert.deepEqual(ids, ['moss', 'snow', 'dog', 'film', 'arc']);
   assert.equal(getSceneById('moss').name, 'Moss & Pappus');
+  assert.equal(getSceneById('arc').name, 'Arc String');
 });
 
 test('getNextSceneIndex wraps cleanly in both directions for keyboard listbox navigation', () => {
@@ -21,13 +21,14 @@ test('getNextSceneIndex wraps cleanly in both directions for keyboard listbox na
   assert.equal(getNextSceneIndex(2, 1, 5), 3);
 });
 
-test('resolveSceneFromQuery maps URL aliases cleanly', () => {
+test('resolveSceneFromQuery maps URL aliases cleanly and defaults to moss', () => {
   assert.equal(resolveSceneFromQuery('moss-tree'), 'moss');
   assert.equal(resolveSceneFromQuery('snow'), 'snow');
   assert.equal(resolveSceneFromQuery('petting'), 'dog');
   assert.equal(resolveSceneFromQuery('film-bloom'), 'film');
   assert.equal(resolveSceneFromQuery('arc'), 'arc');
-  assert.equal(resolveSceneFromQuery(null), 'arc');
+  assert.equal(resolveSceneFromQuery('arc-string'), 'arc');
+  assert.equal(resolveSceneFromQuery(null), 'moss');
 });
 
 test('buildEmbeddedSceneUrl targets self-hosted /scenes/ and forwards allowlisted flags only', () => {

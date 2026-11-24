@@ -12,12 +12,6 @@ export interface SceneDescriptor {
 
 export const LOW_CORTISOL_SCENES: ReadonlyArray<SceneDescriptor> = [
   {
-    id: 'arc',
-    name: 'Arc String',
-    subtitle: 'Electric spring-mass plasma lines',
-    motionTracker: 'arc-custom',
-  },
-  {
     id: 'moss',
     name: 'Moss & Pappus',
     subtitle: 'Macro mossy trunk & dandelion seeds',
@@ -45,6 +39,12 @@ export const LOW_CORTISOL_SCENES: ReadonlyArray<SceneDescriptor> = [
     motionTracker: 'engine-default',
     liveDemoParam: 'film',
   },
+  {
+    id: 'arc',
+    name: 'Arc String',
+    subtitle: 'Electric spring-mass plasma lines',
+    motionTracker: 'arc-custom',
+  },
 ];
 
 export function getSceneById(id: LowCortisolSceneId): SceneDescriptor {
@@ -57,11 +57,11 @@ export function getNextSceneIndex(currentIndex: number, delta: 1 | -1, total = L
 
 export function resolveSceneFromQuery(param: string | null | undefined): LowCortisolSceneId {
   const normalized = (param ?? '').trim().toLowerCase();
-  if (normalized === 'moss' || normalized === 'moss-tree') return 'moss';
+  if (normalized === 'arc' || normalized === 'arc-string' || normalized === 'electric' || normalized === 'shock' || normalized === 'string') return 'arc';
   if (normalized === 'snow' || normalized === 'snow-and-light' || normalized === 'light') return 'snow';
   if (normalized === 'dog' || normalized === 'fur' || normalized === 'dog-fur' || normalized === 'petting') return 'dog';
   if (normalized === 'film' || normalized === 'film-bloom' || normalized === 'bloom' || normalized === 'lake') return 'film';
-  return 'arc';
+  return 'moss';
 }
 
 const FORWARDED_SCENE_FLAGS = new Set([

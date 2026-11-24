@@ -8,21 +8,21 @@ A unified, self-contained sensory playground combining a **React 19 + TypeScript
 
 ## Interactive Scenes
 
-1. **Arc String** *(default, `?demo=arc`)* — Interactive 2D coupled spring-mass electric plasma lines (`src/physics/electricString.ts`, `src/renderer/canvasRenderer.ts`, `src/audio/electricAudio.ts`).
+1. **Moss & Pappus** *(default, `?demo=moss`)* — A macro-focused gnarled forest tree covered in 32k–145k GPU-simulated moss cushion fronds, swaying sporophytes, rising optical-bokeh spores, and sculpted 3D dandelion pappus parachutes floating in woodland sunbeams, with dipole air wakes and serene `Drift Blooms`.
+
+2. **Snow & Light** (`?demo=snow`) — Tens of thousands of procedural 3D dendritic ice crystals and optical-bokeh frost dust swirling before shimmering frozen glass and deep blue rays, with live Field Mode (`Repel Shield` / `Crystal Vortex`), `Blizzard Drift`, `Frozen Rays`, `Field Radius`, `Frost Gust`, and `Starlight Drift`.
+
+3. **Petting Fur** (`?demo=dog`, optional `&breed=labrador|husky|bernese`) — A touch-first macro view of petting a dog's living double-coat fur (38k–136k GPU-simulated anisotropic strands + sunlit coat motes). Supports multi-touch petting (up to 5 independent fingers or webcam digits), breath wind ripples, and live GPU morphing between **Black Labrador**, **Husky**, and **Bernese Mountain Dog**.
+
+4. **Film Bloom** (`?demo=film`, optional `&surface=lake|veined|fracture`) — Physically modeled 9-band CIE two-beam thin-film interference over a coupled 2D capillary-ripple and Marangoni nanometer-thickness fluid simulation on a nocturnal still lake, featuring 3D falling liquid beads, live-morphing surface presets (`Still Lake`, `Micro-Veined`, `Fracture Lines`), GPU meniscus mist motes, and Minnaert water-drop bubble synthesis.
+
+5. **Arc String** (`?demo=arc`) — Interactive 2D coupled spring-mass electric plasma lines (`src/physics/electricString.ts`, `src/renderer/canvasRenderer.ts`, `src/audio/electricAudio.ts`).
    - **Physics**: Up to 16 pinned 36-node chains simulated with Hooke's law structural springs, second-neighbor bending springs, equilibrium restoring forces, and viscous/relative damping at 20 Symplectic Euler sub-steps per frame.
    - **Touch, Mouse & Bowstring Pull**: Press and drag gently to bow a line until release or snap (`68px`); fast swipes, hovers, and multi-touch crossings impart 2D velocity impulses, live corona tether arcs, and radial sparks.
    - **Proximity Resonance & Shimmer**: Vibrating strings within `290px` couple sympathetically, display translucent interior resonance bridges scaled by hum intensity, and ignite constructive-interference flashes and chromatic color-shimmering at high proximity.
    - **Procedural Electric Harp Audio**: Lydian-pentatonic synthesis (`C3–G5`, shorter strings = higher pitch) with stereo panning, feedback echo reverb, band-passed spark crackle bursts, a subtle `C2 + G2` ambient drone, and a faint minor-second/tritone dissonant proximity hum.
    - **Webcam Hand Tracking (`@mediapipe/tasks-vision`)**: Two-hand pinch & stretch draws a dashed charging line and anchors it on release; single-hand pinch grabs and tilts an existing endpoint; extended fingertips pluck strings. Toggle **Tracker Rig** vs. **Gossamer** overlays and 3-state **Camera View** (**Full View**, **50%**, or **Off**).
    - **Controls & Shortcuts**: `Strum` / `Draw` modes (or `Shift` + drag), 5 palettes (`Lime`, `Violet`, `Cyan`, `Amber`, `Mix`), 4 layout presets (`Single`, `Duo`, `Harp`, `Prism`), sliders for `String Tension`, `Reverb Sustain`, `Spark Shower`, and `Arc Voltage`, plus keyboard shortcuts: `D` (toggle Draw/Strum), `Space` (pulse all strings), `C` (clear stage).
-
-2. **Moss & Pappus** (`?demo=moss`) — A macro-focused gnarled forest tree covered in 32k–145k GPU-simulated moss cushion fronds, swaying sporophytes, rising optical-bokeh spores, and sculpted 3D dandelion pappus parachutes floating in woodland sunbeams, with dipole air wakes and serene `Drift Blooms`.
-
-3. **Snow & Light** (`?demo=snow`) — Tens of thousands of procedural 3D dendritic ice crystals and optical-bokeh frost dust swirling before shimmering frozen glass and deep blue rays, with live Field Mode (`Repel Shield` / `Crystal Vortex`), `Blizzard Drift`, `Frozen Rays`, `Field Radius`, `Frost Gust`, and `Starlight Drift`.
-
-4. **Petting Fur** (`?demo=dog`, optional `&breed=labrador|husky|bernese`) — A touch-first macro view of petting a dog's living double-coat fur (38k–136k GPU-simulated anisotropic strands + sunlit coat motes). Supports multi-touch petting (up to 5 independent fingers or webcam digits), breath wind ripples, and live GPU morphing between **Black Labrador**, **Husky**, and **Bernese Mountain Dog**.
-
-5. **Film Bloom** (`?demo=film`, optional `&surface=lake|veined|fracture`) — Physically modeled 9-band CIE two-beam thin-film interference over a coupled 2D capillary-ripple and Marangoni nanometer-thickness fluid simulation on a nocturnal still lake, featuring 3D falling liquid beads, live-morphing surface presets (`Still Lake`, `Micro-Veined`, `Fracture Lines`), GPU meniscus mist motes, and Minnaert water-drop bubble synthesis.
 
 ### Multi-Sensory Controls (Top-Right Dock)
 - **Procedural Audio**: Web Audio electric harp synthesis in **Arc String**, and 48 kHz `AudioWorklet` physical-modeling & ASMR synthesis (modal resonators, Minnaert bubble plinks, dual-SVF airflow/velvet fur whisper, refracted frost micro-grains, Hadamard FDN stereo reverb) across the four WebGPU scenes.
@@ -44,11 +44,11 @@ npm run dev
 ```
 
 Open the local URL printed by Vite (default `http://localhost:5173/`):
-- **Arc String (default):** `/?demo=arc`
-- **Moss & Pappus:** `/?demo=moss` (alias `moss-tree`)
+- **Moss & Pappus (default):** `/?demo=moss` (alias `moss-tree`)
 - **Snow & Light:** `/?demo=snow` (aliases `snow-and-light`, `light`)
 - **Petting Fur:** `/?demo=dog` (aliases `fur`, `dog-fur`, `petting`; optional `&breed=labrador|husky|bernese`)
 - **Film Bloom:** `/?demo=film` (aliases `film-bloom`, `bloom`, `lake`; optional `&surface=lake|veined|fracture`)
+- **Arc String:** `/?demo=arc` (aliases `arc-string`, `electric`, `shock`, `string`)
 
 ### Supported WebGPU URL Flags
 Runtime flags on the top-level URL are forwarded automatically to the embedded WebGPU engine:
