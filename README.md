@@ -216,3 +216,9 @@ engine.start();
 ```
 
 See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full technical architecture breakdown and [`CLOUDFLARE_SETUP.md`](CLOUDFLARE_SETUP.md) for deployment instructions.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE). © 2026 James Rice.
